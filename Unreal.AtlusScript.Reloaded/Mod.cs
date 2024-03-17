@@ -1,7 +1,14 @@
-﻿using Reloaded.Hooks.ReloadedII.Interfaces;
+﻿using AtlusScriptLibrary.Common.Libraries;
+using AtlusScriptLibrary.Common.Text.Encodings;
+using AtlusScriptLibrary.FlowScriptLanguage.Compiler;
+using AtlusScriptLibrary.FlowScriptLanguage.Decompiler;
+using AtlusScriptLibrary.MessageScriptLanguage.Compiler;
+using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
+using Reloaded.Mod.Interfaces.Internal;
 using System.Diagnostics;
 using System.Drawing;
+using System.Text;
 using Unreal.AtlusScript.Reloaded.AtlusScript;
 using Unreal.AtlusScript.Reloaded.Configuration;
 using Unreal.AtlusScript.Reloaded.Template;
@@ -22,6 +29,7 @@ public class Mod : ModBase
     private readonly IModConfig modConfig;
 
     private readonly AtlusScriptService atlusScript;
+    private readonly AtlusAssetsRegistry atlusRegistry;
 
     public Mod(ModContext context)
     {
@@ -41,9 +49,31 @@ public class Mod : ModBase
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
         this.modLoader.GetController<IUObjects>().TryGetTarget(out var uobjects);
 
-        this.atlusScript = new(uobjects!, modDir);
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // Needed for shift_jis encoding to be available
+        AtlusEncoding.SetCharsetDirectory(Path.Join(modDir, "Charsets"));
+        LibraryLookup.SetLibraryPath(Path.Join(modDir, "Libraries"));
+        var gameLibrary = LibraryLookup.GetLibrary("p3re");
 
+        var msgCompiler = new MessageScriptCompiler(AtlusScriptLibrary.MessageScriptLanguage.FormatVersion.Version1BigEndian, Encoding.UTF8) { Library = gameLibrary };
+        var flowDecompiler = new FlowScriptDecompiler() { Library = gameLibrary, SumBits = true };
+        var flowCompiler = new FlowScriptCompiler(AtlusScriptLibrary.FlowScriptLanguage.FormatVersion.Version4BigEndian) { Encoding = Encoding.UTF8, Library = gameLibrary };
+
+        this.atlusRegistry = new(flowCompiler, msgCompiler);
+        this.atlusScript = new(uobjects!, this.atlusRegistry, flowDecompiler, gameLibrary, modDir);
+
+        this.modLoader.ModLoading += this.OnModLoading;
         this.ApplyConfig();
+    }
+
+    private void OnModLoading(IModV1 mod, IModConfigV1 config)
+    {
+        if (!config.ModDependencies.Contains(this.modConfig.ModId))
+        {
+            return;
+        }
+
+        var modDir = this.modLoader.GetDirectoryForModId(config.ModId);
+        this.atlusRegistry.RegisterMod(new(config.ModId, modDir));
     }
 
     private void ApplyConfig()

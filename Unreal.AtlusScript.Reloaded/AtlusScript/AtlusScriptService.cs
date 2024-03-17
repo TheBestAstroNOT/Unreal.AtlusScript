@@ -1,12 +1,9 @@
 ﻿using AtlusScriptLibrary.Common.Libraries;
 using AtlusScriptLibrary.Common.Text;
-using AtlusScriptLibrary.Common.Text.Encodings;
 using AtlusScriptLibrary.FlowScriptLanguage;
 using AtlusScriptLibrary.FlowScriptLanguage.Decompiler;
 using AtlusScriptLibrary.MessageScriptLanguage;
-using AtlusScriptLibrary.MessageScriptLanguage.Compiler;
 using AtlusScriptLibrary.MessageScriptLanguage.Decompiler;
-using System.Runtime.InteropServices;
 using System.Text;
 using Unreal.AtlusScript.Reloaded.AtlusScript.Types;
 using Unreal.AtlusScript.Reloaded.Configuration;
@@ -17,27 +14,26 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript;
 
 internal unsafe class AtlusScriptService
 {
-	private readonly string dumpDir;
-    private readonly MessageScriptCompiler msgCompiler;
+    private readonly AtlusAssetsRegistry assetsRegistry;
     private readonly FlowScriptDecompiler flowDecompiler;
     private readonly Library gameLibrary;
+    private readonly string dumpDir;
     private DumpType dumpBmds;
     private DumpType dumpBfs;
     private Decomp_Endianess decompBfEndian;
 
-    public AtlusScriptService(IUObjects uobjects, string modDir)
+    public AtlusScriptService(
+        IUObjects uobjects,
+        AtlusAssetsRegistry registry,
+        FlowScriptDecompiler flowDecompiler,
+        Library gameLibrary,
+        string modDir)
     {
+        this.assetsRegistry = registry;
+        this.flowDecompiler = flowDecompiler;
+        this.gameLibrary = gameLibrary;
         this.dumpDir = Directory.CreateDirectory(Path.Join(modDir, "dump")).FullName;
         uobjects.ObjectCreated += this.OnObjectCreated;
-
-        AtlusEncoding.SetCharsetDirectory(Path.Join(modDir, "Charsets"));
-        LibraryLookup.SetLibraryPath(Path.Join(modDir, "Libraries"));
-        this.gameLibrary = LibraryLookup.GetLibrary("p3re");
-
-        this.msgCompiler = new MessageScriptCompiler(AtlusScriptLibrary.MessageScriptLanguage.FormatVersion.Version1BigEndian, Encoding.UTF8) { Library = this.gameLibrary };
-        this.flowDecompiler = new FlowScriptDecompiler() { Library = this.gameLibrary };
-
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // Needed for shift_jis encoding to be available
     }
 
     private void OnObjectCreated(UnrealObject obj)
@@ -88,6 +84,13 @@ internal unsafe class AtlusScriptService
                 }
             }
         }
+
+        if (this.assetsRegistry.TryGetAsset(obj.Name, out var asset))
+        {
+            var objAsset = (UAtlusScriptAsset*)obj.Self;
+            objAsset->mBuf = asset;
+            Log.Debug($"Using custom asset for: {obj.Name}");
+        };
     }
 
     private static void DumpBinaryData(TArray<byte> data, string outputFile)
