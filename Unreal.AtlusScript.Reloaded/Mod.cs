@@ -2,8 +2,10 @@
 using Reloaded.Mod.Interfaces;
 using System.Diagnostics;
 using System.Drawing;
+using Unreal.AtlusScript.Reloaded.AtlusScript;
 using Unreal.AtlusScript.Reloaded.Configuration;
 using Unreal.AtlusScript.Reloaded.Template;
+using Unreal.ObjectsEmitter.Interfaces;
 
 namespace Unreal.AtlusScript.Reloaded;
 
@@ -19,6 +21,8 @@ public class Mod : ModBase
     private Config config;
     private readonly IModConfig modConfig;
 
+    private readonly AtlusScriptService atlusScript;
+
     public Mod(ModContext context)
     {
         this.modLoader = context.ModLoader;
@@ -29,10 +33,16 @@ public class Mod : ModBase
         this.modConfig = context.ModConfig;
 
 #if DEBUG
-        //Debugger.Launch();
+        Debugger.Launch();
 #endif
         Log.Initialize(NAME, this.log, Color.White);
         Log.LogLevel = this.config.LogLevel;
+
+        var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
+        this.modLoader.GetController<IUObjects>().TryGetTarget(out var uobjects);
+
+        var dumpDir = Directory.CreateDirectory(Path.Join(modDir, "dump")).FullName;
+        this.atlusScript = new(uobjects!, dumpDir);
 
         this.ApplyConfig();
     }
@@ -40,6 +50,7 @@ public class Mod : ModBase
     private void ApplyConfig()
     {
         Log.LogLevel = this.config.LogLevel;
+        this.atlusScript.SetConfig(this.config);
     }
 
     #region Standard Overrides

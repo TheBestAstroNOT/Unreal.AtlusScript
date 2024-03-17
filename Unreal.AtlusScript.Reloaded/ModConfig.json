@@ -16,9 +16,10 @@
   "IsUniversalMod": false,
   "ModDependencies": [
     "reloaded.sharedlib.hooks",
-    "Reloaded.Memory.SigScan.ReloadedII"
+    "Reloaded.Memory.SigScan.ReloadedII",
+    "Unreal.ObjectsEmitter.Reloaded"
   ],
   "OptionalDependencies": [],
-  "SupportedAppId": [],
+  "SupportedAppId": ["p3r.exe"],
   "ProjectUrl": ""
 }

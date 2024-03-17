@@ -9,6 +9,23 @@ public class Config : Configurable<Config>
     [DisplayName("Log Level")]
     [DefaultValue(LogLevel.Information)]
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
+
+    [DisplayName("Dump BMDs")]
+    [Description("Dumps BMD objects to mod folder: Unreal.AtlusScript/dump/*")]
+    [DefaultValue(DumpType.Disabled)]
+    public DumpType Dump_BMD { get; set; } = DumpType.Disabled;
+
+    [DisplayName("Dump BFs")]
+    [Description("Dumps BF objects to mod folder: Unreal.AtlusScript/dump/*")]
+    [DefaultValue(DumpType.Disabled)]
+    public DumpType Dump_BF { get; set; } = DumpType.Disabled;
+}
+
+public enum DumpType
+{
+    Disabled,
+    Binary_Data,
+    Decompile,
 }
 
 /// <summary>
