@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unreal.AtlusScript.Reloaded", "Unreal.AtlusScript.Reloaded\Unreal.AtlusScript.Reloaded.csproj", "{962CED2F-AEB5-47BB-B7A1-1CCECC45D9F6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{962CED2F-AEB5-47BB-B7A1-1CCECC45D9F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{962CED2F-AEB5-47BB-B7A1-1CCECC45D9F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{962CED2F-AEB5-47BB-B7A1-1CCECC45D9F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{962CED2F-AEB5-47BB-B7A1-1CCECC45D9F6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2356A757-07EE-41A2-A2F8-60B11654E1F2}
+	EndGlobalSection
+EndGlobal

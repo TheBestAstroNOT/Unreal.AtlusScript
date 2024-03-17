@@ -1,0 +1,21 @@
+{
+  "ModId": "Unreal.AtlusScript.Reloaded",
+  "ModName": "Unreal Atlus Script",
+  "ModAuthor": "zutomayofan50",
+  "ModVersion": "1.0.0",
+  "ModDescription": "Edit Atlus Script objects from source files.",
+  "ModDll": "Unreal.AtlusScript.Reloaded.dll",
+  "ModIcon": "Preview.png",
+  "ModR2RManagedDll32": "x86/Unreal.AtlusScript.Reloaded.dll",
+  "ModR2RManagedDll64": "x64/Unreal.AtlusScript.Reloaded.dll",
+  "ModNativeDll32": "",
+  "ModNativeDll64": "",
+  "IsLibrary": false,
+  "ReleaseMetadataFileName": "Unreal.AtlusScript.Reloaded.ReleaseMetadata.json",
+  "PluginData": {},
+  "IsUniversalMod": false,
+  "ModDependencies": [ "reloaded.sharedlib.hooks" ],
+  "OptionalDependencies": [],
+  "SupportedAppId": [],
+  "ProjectUrl": ""
+}
