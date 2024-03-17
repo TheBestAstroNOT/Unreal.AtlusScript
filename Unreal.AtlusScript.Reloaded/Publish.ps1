@@ -315,7 +315,7 @@ function Get-Common-Publish-Args {
         $AllowDeltas=$True
     )
 	
-	$arguments = "--modfolder `"$publishBuildDirectory`" --packagename `"$PackageName`""
+	$arguments = "--modfolder `"$publishBuildDirectory`" --packagename `"$PackageName`" --ignoreregexes `".*\.nuspec`""
 	if ($ChangelogPath) {
         $arguments += " --changelogpath `"$changelogFullPath`""
 	}
