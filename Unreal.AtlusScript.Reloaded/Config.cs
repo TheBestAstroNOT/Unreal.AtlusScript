@@ -1,5 +1,4 @@
-﻿using Reloaded.Mod.Interfaces.Structs;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Unreal.AtlusScript.Reloaded.Template.Configuration;
 
 namespace Unreal.AtlusScript.Reloaded.Configuration;
@@ -19,6 +18,11 @@ public class Config : Configurable<Config>
     [Description("Dumps BF objects to mod folder: Unreal.AtlusScript/dump/*")]
     [DefaultValue(DumpType.Disabled)]
     public DumpType Dump_BF { get; set; } = DumpType.Disabled;
+
+    [DisplayName("Decompile BF Endianess")]
+    [Description("Set what endianess to use when decompiling BFs. Default is to try both if one fails, with BE first.")]
+    [DefaultValue(Decomp_Endianess.Both)]
+    public Decomp_Endianess Decomp_BF_Endian { get; set; } = Decomp_Endianess.Both;
 }
 
 public enum DumpType
@@ -26,6 +30,13 @@ public enum DumpType
     Disabled,
     Binary_Data,
     Decompile,
+}
+
+public enum Decomp_Endianess
+{
+    Both,
+    BIG_ENDIAN,
+    LITTLE_ENDIAN,
 }
 
 /// <summary>

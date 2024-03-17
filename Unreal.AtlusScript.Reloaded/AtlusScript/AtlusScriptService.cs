@@ -1,9 +1,12 @@
 ﻿using AtlusScriptLibrary.Common.Libraries;
 using AtlusScriptLibrary.Common.Text;
 using AtlusScriptLibrary.Common.Text.Encodings;
+using AtlusScriptLibrary.FlowScriptLanguage;
+using AtlusScriptLibrary.FlowScriptLanguage.Decompiler;
 using AtlusScriptLibrary.MessageScriptLanguage;
 using AtlusScriptLibrary.MessageScriptLanguage.Compiler;
 using AtlusScriptLibrary.MessageScriptLanguage.Decompiler;
+using System.Runtime.InteropServices;
 using System.Text;
 using Unreal.AtlusScript.Reloaded.AtlusScript.Types;
 using Unreal.AtlusScript.Reloaded.Configuration;
@@ -15,10 +18,12 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript;
 internal unsafe class AtlusScriptService
 {
 	private readonly string dumpDir;
-    private readonly MessageScriptCompiler compiler;
+    private readonly MessageScriptCompiler msgCompiler;
+    private readonly FlowScriptDecompiler flowDecompiler;
     private readonly Library gameLibrary;
     private DumpType dumpBmds;
     private DumpType dumpBfs;
+    private Decomp_Endianess decompBfEndian;
 
     public AtlusScriptService(IUObjects uobjects, string modDir)
     {
@@ -27,8 +32,11 @@ internal unsafe class AtlusScriptService
 
         AtlusEncoding.SetCharsetDirectory(Path.Join(modDir, "Charsets"));
         LibraryLookup.SetLibraryPath(Path.Join(modDir, "Libraries"));
-        this.gameLibrary = LibraryLookup.GetLibrary("p3r");
-        this.compiler = new MessageScriptCompiler(FormatVersion.Version1BigEndian, AtlusEncoding.Persona5RoyalEFIGS) { Library = this.gameLibrary };
+        this.gameLibrary = LibraryLookup.GetLibrary("p3re");
+
+        this.msgCompiler = new MessageScriptCompiler(AtlusScriptLibrary.MessageScriptLanguage.FormatVersion.Version1BigEndian, Encoding.UTF8) { Library = this.gameLibrary };
+        this.flowDecompiler = new FlowScriptDecompiler() { Library = this.gameLibrary };
+
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // Needed for shift_jis encoding to be available
     }
 
@@ -43,14 +51,12 @@ internal unsafe class AtlusScriptService
             {
                 var outputFile = Path.Join(this.dumpDir, $"{obj.Name}.bmd");
                 DumpBinaryData(bmd->mBuf, outputFile);
-                Log.Information($"Dumped BMD: {obj.Name}");
             }
             else if (this.dumpBmds == DumpType.Decompile)
             {
                 try
                 {
                     this.DecompileBMD(obj);
-                    Log.Information($"Decompiled and Dumped BMD: {obj.Name}");
                 }
                 catch (Exception ex)
                 {
@@ -68,11 +74,18 @@ internal unsafe class AtlusScriptService
             {
                 var outputFile = Path.Join(this.dumpDir, $"{obj.Name}.bf");
                 DumpBinaryData(bf->mBuf, outputFile);
-                Log.Information($"Dumped BF: {Path.GetFileName(outputFile)}");
             }
-            else if (this.dumpBmds == DumpType.Decompile)
+            else if (this.dumpBfs == DumpType.Decompile)
             {
-
+                try
+                {
+                    var outputFile = Path.Join(this.dumpDir, $"{obj.Name}.flow");
+                    this.DecompileBF(obj, outputFile);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"Failed to decompile BF: {obj.Name}");
+                }
             }
         }
     }
@@ -87,6 +100,8 @@ internal unsafe class AtlusScriptService
         using var fs = new FileStream(outputFile, FileMode.Create);
         var span = new Span<byte>(data.AllocatorInstance, data.Num);
         fs.Write(span);
+
+        Log.Information($"Dumped file: {Path.GetFileName(outputFile)}");
     }
 
     private void DecompileBMD(UnrealObject obj)
@@ -100,16 +115,76 @@ internal unsafe class AtlusScriptService
 
         var bmd = (UAtlusScriptAsset*)obj.Self;
         var span = new Span<byte>(bmd->mBuf.AllocatorInstance, bmd->mBuf.Num);
-        var stream = new MemoryStream(span.ToArray());
-
-        MessageScript script = MessageScript.FromStream(stream, FormatVersion.Version1Reload, Encoding.UTF8);
+        using var stream = new MemoryStream(span.ToArray());
+        var script = MessageScript.FromStream(stream, AtlusScriptLibrary.MessageScriptLanguage.FormatVersion.Version1Reload, Encoding.UTF8);
         using var decompiler = new MessageScriptDecompiler(new FileTextWriter(outputFile)) { Library = this.gameLibrary };
         decompiler.Decompile(script);
+
+        Log.Information($"Decompiled: {obj.Name}");
+    }
+
+    private void DecompileBF(UnrealObject obj, string outputFile)
+    {
+        if (File.Exists(outputFile))
+        {
+            return;
+        }
+
+        var bf = (UAtlusScriptAsset*)obj.Self;
+        var bfData = new Span<byte>(bf->mBuf.AllocatorInstance, bf->mBuf.Num).ToArray();
+
+        if (this.decompBfEndian == Decomp_Endianess.Both || this.decompBfEndian == Decomp_Endianess.BIG_ENDIAN)
+        {
+            try
+            {
+                var flowBE = FlowScript.FromStream(new MemoryStream(bfData), Encoding.UTF8, AtlusScriptLibrary.FlowScriptLanguage.FormatVersion.Version4BigEndian, false);
+
+                // Decompile successfully with BE.
+                if (this.flowDecompiler.TryDecompile(flowBE, outputFile))
+                {
+                    Log.Information($"Decompiled with BE: {Path.GetFileName(outputFile)}");
+                    return;
+                }
+
+                // Decompile failed with BE but not set to try both, so exit.
+                if (decompBfEndian == Decomp_Endianess.BIG_ENDIAN)
+                {
+                    Log.Error($"Failed to decompile BF with BE: {obj.Name}");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Failed to decompile BF with BE: {obj.Name}");
+                Log.Information("Trying to decompile with LE...");
+            }
+        }
+
+        // Decompile with LE.
+        try
+        {
+            var flowLE = FlowScript.FromStream(new MemoryStream(bfData), Encoding.UTF8, AtlusScriptLibrary.FlowScriptLanguage.FormatVersion.Version4, false);
+
+            // Decompile successfully with BE.
+            if (this.flowDecompiler.TryDecompile(flowLE, outputFile))
+            {
+                Log.Information($"Decompiled with LE: {Path.GetFileName(outputFile)}");
+            }
+            else
+            {
+                Log.Information($"Failed to decompile with LE: {Path.GetFileName(outputFile)}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Failed to decompile BF with LE: {obj.Name}");
+        }
     }
 
     public void SetConfig(Config config)
 	{
 		this.dumpBmds = config.Dump_BMD;
         this.dumpBfs = config.Dump_BF;
+        this.decompBfEndian = config.Decomp_BF_Endian;
 	}
 }
