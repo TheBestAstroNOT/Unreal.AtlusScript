@@ -41,8 +41,7 @@ public class Mod : ModBase
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
         this.modLoader.GetController<IUObjects>().TryGetTarget(out var uobjects);
 
-        var dumpDir = Directory.CreateDirectory(Path.Join(modDir, "dump")).FullName;
-        this.atlusScript = new(uobjects!, dumpDir);
+        this.atlusScript = new(uobjects!, modDir);
 
         this.ApplyConfig();
     }
