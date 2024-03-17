@@ -9,6 +9,7 @@ using Reloaded.Mod.Interfaces.Internal;
 using System.Diagnostics;
 using System.Drawing;
 using System.Text;
+using Unreal.AtlusScript.Interfaces;
 using Unreal.AtlusScript.Reloaded.AtlusScript;
 using Unreal.AtlusScript.Reloaded.Configuration;
 using Unreal.AtlusScript.Reloaded.Template;
@@ -16,7 +17,7 @@ using Unreal.ObjectsEmitter.Interfaces;
 
 namespace Unreal.AtlusScript.Reloaded;
 
-public class Mod : ModBase
+public class Mod : ModBase, IExports
 {
     public const string NAME = "Unreal.AtlusScript";
 
@@ -61,6 +62,7 @@ public class Mod : ModBase
         this.atlusRegistry = new(flowCompiler, msgCompiler);
         this.atlusScript = new(uobjects!, this.atlusRegistry, flowDecompiler, gameLibrary, modDir);
 
+        this.modLoader.AddOrReplaceController<IAtlusAssets>(this.owner, this.atlusRegistry);
         this.modLoader.ModLoading += this.OnModLoading;
         this.ApplyConfig();
     }
@@ -91,6 +93,8 @@ public class Mod : ModBase
         log.WriteLine($"[{modConfig.ModId}] Config Updated: Applying");
         this.ApplyConfig();
     }
+
+    public Type[] GetTypes() => new Type[] { typeof(IAtlusAssets) };
     #endregion
 
     #region For Exports, Serialization etc.
