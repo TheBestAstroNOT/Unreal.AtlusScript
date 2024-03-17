@@ -52,6 +52,7 @@
     <ProjectReference Include="..\submodules\Atlus-Script-Tools\Source\AtlusScriptLibrary\AtlusScriptLibrary.csproj" />
     <ProjectReference Include="..\submodules\Project.Utils\Project.Utils.csproj" />
     <ProjectReference Include="..\submodules\Unreal.ObjectsEmitter\Unreal.ObjectsEmitter.Interfaces\Unreal.ObjectsEmitter.Interfaces.csproj" />
+    <ProjectReference Include="..\Unreal.AtlusScript.Interfaces\Unreal.AtlusScript.Interfaces.csproj" />
   </ItemGroup>
 
 </Project>
