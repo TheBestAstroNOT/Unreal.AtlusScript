@@ -40,7 +40,7 @@ internal unsafe class AtlusScriptService
     {
         if (obj.Name.StartsWith("bmd", StringComparison.OrdinalIgnoreCase))
         {
-			Log.Debug(obj.Name);
+            Log.Debug($"Loaded: {obj.Name}");
 
             var bmd = (UAtlusScriptAsset*)obj.Self;
             if (this.dumpBmds == DumpType.Binary_Data)
@@ -63,7 +63,7 @@ internal unsafe class AtlusScriptService
 
         if (obj.Name.StartsWith("bf", StringComparison.OrdinalIgnoreCase))
         {
-            Log.Debug(obj.Name);
+            Log.Debug($"Loaded: {obj.Name}");
 
             var bf = (UAtlusScriptAsset*)obj.Self;
             if (this.dumpBfs == DumpType.Binary_Data)
@@ -89,7 +89,7 @@ internal unsafe class AtlusScriptService
         {
             var objAsset = (UAtlusScriptAsset*)obj.Self;
             objAsset->mBuf = asset;
-            Log.Debug($"Using custom asset for: {obj.Name}");
+            Log.Debug($"Using custom asset: {obj.Name}");
         };
     }
 
