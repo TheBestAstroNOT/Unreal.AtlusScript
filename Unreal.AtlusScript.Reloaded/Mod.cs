@@ -1,5 +1,7 @@
 ﻿using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
+using System.Diagnostics;
+using System.Drawing;
 using Unreal.AtlusScript.Reloaded.Configuration;
 using Unreal.AtlusScript.Reloaded.Template;
 
@@ -7,6 +9,8 @@ namespace Unreal.AtlusScript.Reloaded;
 
 public class Mod : ModBase
 {
+    public const string NAME = "Unreal.AtlusScript";
+
     private readonly IModLoader modLoader;
     private readonly IReloadedHooks? hooks;
     private readonly ILogger log;
@@ -23,6 +27,19 @@ public class Mod : ModBase
         this.owner = context.Owner;
         this.config = context.Configuration;
         this.modConfig = context.ModConfig;
+
+#if DEBUG
+        //Debugger.Launch();
+#endif
+        Log.Initialize(NAME, this.log, Color.White);
+        Log.LogLevel = this.config.LogLevel;
+
+        this.ApplyConfig();
+    }
+
+    private void ApplyConfig()
+    {
+        Log.LogLevel = this.config.LogLevel;
     }
 
     #region Standard Overrides
@@ -32,6 +49,7 @@ public class Mod : ModBase
         // ... your code here.
         config = configuration;
         log.WriteLine($"[{modConfig.ModId}] Config Updated: Applying");
+        this.ApplyConfig();
     }
     #endregion
 
