@@ -38,7 +38,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         {
             try
             {
-                this.AddAsset(Path.GetFileNameWithoutExtension(msgFile), File.ReadAllText(msgFile), AssetType.MSG);
+                this.AddAsset(Path.GetFileNameWithoutExtension(msgFile), File.ReadAllText(msgFile), AssetType.BMD);
             }
             catch (Exception ex)
             {
@@ -50,7 +50,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         {
             try
             {
-                this.AddAsset(Path.GetFileNameWithoutExtension(flowFile), File.ReadAllText(flowFile), AssetType.FLOW);
+                this.AddAsset(Path.GetFileNameWithoutExtension(flowFile), File.ReadAllText(flowFile), AssetType.BF);
             }
             catch (Exception ex)
             {
@@ -69,8 +69,8 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     {
         switch (type)
         {
-            case AssetType.MSG: this.CompileBMD(name, content); break;
-            case AssetType.FLOW: this.CompileBF(name, content); break;
+            case AssetType.BMD: this.CompileBMD(name, content); break;
+            case AssetType.BF: this.CompileBF(name, content); break;
             default: break;
         }
     }

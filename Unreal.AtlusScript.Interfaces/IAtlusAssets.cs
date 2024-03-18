@@ -19,6 +19,6 @@ public interface IAtlusAssets
 
 public enum AssetType
 {
-    MSG,
-    FLOW,
+    BMD,
+    BF,
 }
