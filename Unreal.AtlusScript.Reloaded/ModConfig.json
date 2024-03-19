@@ -11,7 +11,7 @@
   "ModNativeDll32": "",
   "ModNativeDll64": "",
   "Tags": [],
-  "CanUnload": null,
+  "CanUnload": false,
   "HasExports": true,
   "IsLibrary": false,
   "ReleaseMetadataFileName": "Unreal.AtlusScript.Reloaded.ReleaseMetadata.json",
@@ -37,6 +37,21 @@
           "ReleaseMetadataName": "Reloaded.Memory.SigScan.ReloadedII.ReleaseMetadata.json"
         }
       }
+    },
+    "GameBananaDependencies": {
+      "IdToConfigMap": {
+        "Unreal.ObjectsEmitter.Reloaded": {
+          "Config": {
+            "ItemType": "Mod",
+            "ItemId": 500638
+          },
+          "ReleaseMetadataName": "Unreal.ObjectsEmitter.Reloaded.ReleaseMetadata.json"
+        }
+      }
+    },
+    "GameBanana": {
+      "ItemType": "Mod",
+      "ItemId": 501844
     }
   },
   "IsUniversalMod": false,
