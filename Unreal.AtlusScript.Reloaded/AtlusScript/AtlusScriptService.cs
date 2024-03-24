@@ -14,6 +14,7 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript;
 
 internal unsafe class AtlusScriptService
 {
+    private readonly IUnreal unreal;
     private readonly AtlusAssetsRegistry assetsRegistry;
     private readonly FlowScriptDecompiler flowDecompiler;
     private readonly Library gameLibrary;
@@ -24,11 +25,13 @@ internal unsafe class AtlusScriptService
 
     public AtlusScriptService(
         IUObjects uobjects,
+        IUnreal unreal,
         AtlusAssetsRegistry registry,
         FlowScriptDecompiler flowDecompiler,
         Library gameLibrary,
         string modDir)
     {
+        this.unreal = unreal;
         this.assetsRegistry = registry;
         this.flowDecompiler = flowDecompiler;
         this.gameLibrary = gameLibrary;
@@ -88,6 +91,11 @@ internal unsafe class AtlusScriptService
         if (this.assetsRegistry.TryGetAsset(obj.Name, out var asset))
         {
             var objAsset = (UAtlusScriptAsset*)obj.Self;
+
+            var umBuf = this.unreal.FMalloc(asset.Num, 16);
+            Buffer.MemoryCopy(asset.AllocatorInstance, (void*)umBuf, asset.Num, asset.Num);
+            asset.AllocatorInstance = (byte*)umBuf;
+
             objAsset->mBuf = asset;
             Log.Debug($"Using custom asset: {obj.Name}");
         };
