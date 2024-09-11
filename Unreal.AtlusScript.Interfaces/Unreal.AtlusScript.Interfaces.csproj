@@ -1,9 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<Version>1.1.0</Version>
+	<Authors>RyoTune</Authors>
+	<Description>Edit Atlus Script objects from source files.</Description>
+	<RepositoryUrl>https://github.com/RyoTune/Unreal.AtlusScript</RepositoryUrl>
   </PropertyGroup>
 
 </Project>

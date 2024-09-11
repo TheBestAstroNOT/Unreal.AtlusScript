@@ -2,7 +2,7 @@
   "ModId": "Unreal.AtlusScript.Reloaded",
   "ModName": "Unreal Atlus Script",
   "ModAuthor": "zutomayofan50",
-  "ModVersion": "1.0.1",
+  "ModVersion": "1.1.0",
   "ModDescription": "Edit Atlus Script objects from source files.",
   "ModDll": "Unreal.AtlusScript.Reloaded.dll",
   "ModIcon": "Preview.png",
@@ -57,7 +57,8 @@
   "IsUniversalMod": false,
   "ModDependencies": [
     "reloaded.sharedlib.hooks",
-    "Unreal.ObjectsEmitter.Reloaded"
+    "Unreal.ObjectsEmitter.Reloaded",
+    "Reloaded.Memory.SigScan.ReloadedII"
   ],
   "OptionalDependencies": [],
   "SupportedAppId": [

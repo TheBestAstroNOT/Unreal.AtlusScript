@@ -4,7 +4,9 @@ using AtlusScriptLibrary.FlowScriptLanguage;
 using AtlusScriptLibrary.FlowScriptLanguage.Decompiler;
 using AtlusScriptLibrary.MessageScriptLanguage;
 using AtlusScriptLibrary.MessageScriptLanguage.Decompiler;
+using System.Runtime.InteropServices;
 using System.Text;
+using Unreal.AtlusScript.Interfaces;
 using Unreal.AtlusScript.Reloaded.AtlusScript.Types;
 using Unreal.AtlusScript.Reloaded.Configuration;
 using Unreal.ObjectsEmitter.Interfaces;
@@ -18,7 +20,9 @@ internal unsafe class AtlusScriptService
     private readonly AtlusAssetsRegistry assetsRegistry;
     private readonly FlowScriptDecompiler flowDecompiler;
     private readonly Library gameLibrary;
+    private readonly GameFunctions game;
     private readonly string dumpDir;
+
     private DumpType dumpBmds;
     private DumpType dumpBfs;
     private Decomp_Endianess decompBfEndian;
@@ -35,6 +39,7 @@ internal unsafe class AtlusScriptService
         this.assetsRegistry = registry;
         this.flowDecompiler = flowDecompiler;
         this.gameLibrary = gameLibrary;
+        this.game = new();
         this.dumpDir = Directory.CreateDirectory(Path.Join(modDir, "dump")).FullName;
         uobjects.ObjectCreated += this.OnObjectCreated;
     }
@@ -88,15 +93,16 @@ internal unsafe class AtlusScriptService
             }
         }
 
-        if (this.assetsRegistry.TryGetAsset(obj.Name, out var asset))
+        if (this.assetsRegistry.TryGetAsset(this.game.IsAstrea() ? AssetMode.Astrea : AssetMode.Default, obj.Name, out var data))
         {
             var objAsset = (UAtlusScriptAsset*)obj.Self;
 
-            var umBuf = this.unreal.FMalloc(asset.Num, 16);
-            Buffer.MemoryCopy(asset.AllocatorInstance, (void*)umBuf, asset.Num, asset.Num);
-            asset.AllocatorInstance = (byte*)umBuf;
+            var buffer = this.unreal.FMalloc(data.Length, 0);
+            Marshal.Copy(data, 0, buffer, data.Length);
 
-            objAsset->mBuf = asset;
+            objAsset->mBuf.Num = data.Length;
+            objAsset->mBuf.Max = data.Length;
+            objAsset->mBuf.AllocatorInstance = (byte*)buffer;
             Log.Debug($"Using custom asset: {obj.Name}");
         };
     }

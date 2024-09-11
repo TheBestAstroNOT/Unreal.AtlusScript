@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>12.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <OutputPath>$(RELOADEDIIMODS)/Unreal.AtlusScript.Reloaded</OutputPath>
@@ -43,14 +43,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Reloaded.Memory.SigScan.ReloadedII.Interfaces" Version="1.2.0" />
     <PackageReference Include="Reloaded.Mod.Interfaces" Version="2.4.0" ExcludeAssets="runtime" />
     <PackageReference Include="Reloaded.SharedLib.Hooks" Version="1.9.0" />
+    <PackageReference Include="Unreal.ObjectsEmitter.Interfaces" Version="1.2.3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\submodules\Atlus-Script-Tools\Source\AtlusScriptLibrary\AtlusScriptLibrary.csproj" />
     <ProjectReference Include="..\submodules\Project.Utils\Project.Utils.csproj" />
-    <ProjectReference Include="..\submodules\Unreal.ObjectsEmitter\Unreal.ObjectsEmitter.Interfaces\Unreal.ObjectsEmitter.Interfaces.csproj" />
     <ProjectReference Include="..\Unreal.AtlusScript.Interfaces\Unreal.AtlusScript.Interfaces.csproj" />
   </ItemGroup>
 

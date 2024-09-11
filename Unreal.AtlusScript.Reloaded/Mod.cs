@@ -4,6 +4,7 @@ using AtlusScriptLibrary.FlowScriptLanguage.Compiler;
 using AtlusScriptLibrary.FlowScriptLanguage.Decompiler;
 using AtlusScriptLibrary.MessageScriptLanguage.Compiler;
 using Reloaded.Hooks.ReloadedII.Interfaces;
+using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
 using System.Diagnostics;
@@ -51,6 +52,7 @@ public class Mod : ModBase, IExports
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
         this.modLoader.GetController<IUObjects>().TryGetTarget(out var uobjects);
         this.modLoader.GetController<IUnreal>().TryGetTarget(out var unreal);
+        this.modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // Needed for shift_jis encoding to be available
         AtlusEncoding.SetCharsetDirectory(Path.Join(modDir, "Charsets"));
@@ -61,9 +63,11 @@ public class Mod : ModBase, IExports
         var flowDecompiler = new FlowScriptDecompiler() { Library = gameLibrary, SumBits = true };
         var flowCompiler = new FlowScriptCompiler(AtlusScriptLibrary.FlowScriptLanguage.FormatVersion.Version4BigEndian) { Encoding = Encoding.UTF8, Library = gameLibrary };
 
-        this.atlusRegistry = new(flowCompiler, msgCompiler);
+        var assetCompiler = new AtlusAssetCompiler(flowCompiler, msgCompiler);
+        this.atlusRegistry = new(assetCompiler);
         this.atlusScript = new(uobjects!, unreal!, this.atlusRegistry, flowDecompiler, gameLibrary, modDir);
 
+        ScanHooks.Initialize(scanner!, hooks!);
         this.modLoader.AddOrReplaceController<IAtlusAssets>(this.owner, this.atlusRegistry);
         this.modLoader.ModLoading += this.OnModLoading;
         this.ApplyConfig();

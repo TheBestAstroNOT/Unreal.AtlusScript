@@ -1,61 +1,70 @@
-﻿using AtlusScriptLibrary.FlowScriptLanguage.Compiler;
-using AtlusScriptLibrary.MessageScriptLanguage.Compiler;
-using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
 using Unreal.AtlusScript.Interfaces;
+using Unreal.AtlusScript.Reloaded.AtlusScript.Models;
 using Unreal.AtlusScript.Reloaded.AtlusScript.Types;
-using Unreal.ObjectsEmitter.Interfaces.Types;
 
 namespace Unreal.AtlusScript.Reloaded.AtlusScript;
 
 internal unsafe class AtlusAssetsRegistry : IAtlusAssets
 {
-    private readonly MessageScriptCompiler msgCompiler;
-    private readonly FlowScriptCompiler flowCompiler;
-    private readonly Dictionary<string, TArray<byte>> newAtlusAssets = new(StringComparer.OrdinalIgnoreCase);
+    private readonly AtlusAssetCompiler compiler;
+    private readonly List<BaseAssetContainer> assetContainers = [];
 
-    public AtlusAssetsRegistry(FlowScriptCompiler flowCompiler, MessageScriptCompiler msgCompiler)
+    public AtlusAssetsRegistry(AtlusAssetCompiler compiler)
     {
-        this.flowCompiler = flowCompiler;
-        this.msgCompiler = msgCompiler;
+        this.compiler = compiler;
     }
 
     public void RegisterMod(AssetsMod mod)
     {
-        if (Directory.Exists(mod.AssetsDir))
+        Log.Information($"Registering assets from: {mod.ModId}");
+        if (Directory.Exists(mod.DefaultAssetsDir))
         {
-            Log.Information($"Registering assets from: {mod.ModId}");
-            this.AddAssetsFolder(mod.AssetsDir);
+            this.AddAssetsFolder(mod.DefaultAssetsDir);
+        }
+
+        if (Directory.Exists(mod.AstreaAssetsDir))
+        {
+            this.AddAssetsFolder(mod.AstreaAssetsDir, AssetMode.Astrea);
         }
     }
 
-    public bool TryGetAsset(string assetName, out TArray<byte> asset)
-        => newAtlusAssets.TryGetValue(assetName, out asset);
+    public bool TryGetAsset(AssetMode mode, string assetName, [NotNullWhen(true)]out byte[]? assetData)
+    {
+        var asset = GetAssetForMode(mode, assetName);
 
-    public void AddAssetsFolder(string assetsDir)
+        if (asset == null || asset.Data == null)
+        {
+            assetData = null;
+            return false;
+        }
+
+        assetData = asset.Data;
+        return true;
+    }
+
+    private BaseAssetContainer? GetAssetForMode(AssetMode mode, string assetName)
+        => this.assetContainers.FirstOrDefault(x => (x.Mode == mode || x.Mode == AssetMode.Both) && x.Name.Equals(assetName, StringComparison.OrdinalIgnoreCase));
+
+    public void AddAssetsFolder(string assetsDir) => this.AddAssetsFolder(assetsDir, AssetMode.Default);
+
+    public void AddAssetsFolder(string assetsDir, AssetMode mode)
     {
         // Process folder.
         foreach (var msgFile in Directory.EnumerateFiles(assetsDir, "*.msg"))
         {
-            try
-            {
-                this.AddAsset(Path.GetFileNameWithoutExtension(msgFile), File.ReadAllText(msgFile), AssetType.BMD);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"Failed to compile message script.\nFile: {msgFile}");
-            }
+            var msgAsset = new FileAssetContainer(this.compiler, msgFile) { Mode = mode };
+            msgAsset.Sync();
+
+            this.assetContainers.Add(msgAsset);
         }
 
         foreach (var flowFile in Directory.EnumerateFiles(assetsDir, "*.flow"))
         {
-            try
-            {
-                this.AddAsset(Path.GetFileNameWithoutExtension(flowFile), File.ReadAllText(flowFile), AssetType.BF);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"Failed to compile flowscript.\nFile: {flowFile}");
-            }
+            var flowAsset = new FileAssetContainer(this.compiler, flowFile) { Mode = mode };
+            flowAsset.Sync();
+
+            this.assetContainers.Add(flowAsset);
         }
 
         // Recursively process nested folders.
@@ -66,59 +75,8 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     }
 
     public void AddAsset(string name, string content, AssetType type)
-    {
-        switch (type)
-        {
-            case AssetType.BMD: this.CompileBMD(name, content); break;
-            case AssetType.BF: this.CompileBF(name, content); break;
-            default: break;
-        }
-    }
+        => this.AddAsset(name, content, type, AssetMode.Default);
 
-    private void CompileBMD(string assetName, string msgContent)
-    {
-        if (msgCompiler.TryCompile(msgContent, out var script))
-        {
-            using var ms = new MemoryStream();
-            script.ToStream(ms);
-
-            newAtlusAssets[assetName] = TArrayFromMemStream(ms);
-            Log.Information($"Registered BMD asset: {assetName}");
-        }
-        else
-        {
-            throw new Exception();
-        }
-    }
-
-    private void CompileBF(string assetName, string flowContent)
-    {
-        if (this.flowCompiler.TryCompile(flowContent, out var flow))
-        {
-            using var ms = new MemoryStream();
-            flow.ToStream(ms);
-
-            newAtlusAssets[assetName] = TArrayFromMemStream(ms);
-            Log.Information($"Registered BF asset: {assetName}");
-        }
-        else
-        {
-            throw new Exception();
-        }
-    }
-
-    private static TArray<byte> TArrayFromMemStream(MemoryStream ms)
-    {
-        var bytes = ms.ToArray();
-        var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
-
-        var array = new TArray<byte>()
-        {
-            Num = bytes.Length,
-            Max = bytes.Length,
-            AllocatorInstance = (byte*)handle.AddrOfPinnedObject(),
-        };
-
-        return array;
-    }
+    public void AddAsset(string name, string content, AssetType type, AssetMode mode)
+        => this.assetContainers.Add(new TextAssetContainer(this.compiler, name, type == AssetType.BF, content) { Mode = mode });
 }
