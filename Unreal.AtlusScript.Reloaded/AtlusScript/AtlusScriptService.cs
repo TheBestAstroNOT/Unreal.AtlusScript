@@ -46,7 +46,14 @@ internal unsafe class AtlusScriptService
 
     private void OnObjectCreated(UnrealObject obj)
     {
-        if (obj.Name.StartsWith("bmd", StringComparison.OrdinalIgnoreCase))
+        var isBmdObj = obj.Name.StartsWith("bmd", StringComparison.OrdinalIgnoreCase);
+        var isBfObj = obj.Name.StartsWith("bf", StringComparison.OrdinalIgnoreCase);
+        if (isBmdObj == false && isBfObj == false)
+        {
+            return;
+        }
+
+        if (isBmdObj)
         {
             Log.Debug($"Loaded: {obj.Name}");
 
@@ -68,8 +75,7 @@ internal unsafe class AtlusScriptService
                 }
             }
         }
-
-        if (obj.Name.StartsWith("bf", StringComparison.OrdinalIgnoreCase))
+        else
         {
             Log.Debug($"Loaded: {obj.Name}");
 

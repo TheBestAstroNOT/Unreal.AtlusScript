@@ -1,17 +1,26 @@
-﻿namespace Unreal.AtlusScript.Reloaded.AtlusScript;
+﻿using System.Runtime.InteropServices;
 
-internal class GameFunctions
+namespace Unreal.AtlusScript.Reloaded.AtlusScript;
+
+internal unsafe class GameFunctions
 {
-    private delegate bool IsAstrea_();
-    private IsAstrea_? isAstrea;
+    private delegate UGlobalWork* GetGlobalWork();
+    private GetGlobalWork? getGlobalWork;
 
     public GameFunctions()
     {
         ScanHooks.Add(
-            nameof(IsAstrea),
-            "48 83 EC 28 E8 ?? ?? ?? ?? 48 85 C0 74 ?? E8 ?? ?? ?? ?? 48 8B C8 E8 ?? ?? ?? ?? 3C 01 0F 94 C0 48 83 C4 28 C3 48 83 C4 28 C3",
-            (hooks, result) => this.isAstrea = hooks.CreateWrapper<IsAstrea_>(result, out _));
+            nameof(GetGlobalWork),
+            "48 89 5C 24 ?? 57 48 83 EC 20 48 8B 0D ?? ?? ?? ?? 33 DB",
+            (hooks, result) => this.getGlobalWork = hooks.CreateWrapper<GetGlobalWork>(result, out _));
     }
 
-    public bool IsAstrea() => this.isAstrea!();
+    public bool IsAstrea() => this.getGlobalWork!()->isAstrea;
+
+    [StructLayout(LayoutKind.Explicit)]
+    private struct UGlobalWork
+    {
+        [FieldOffset(0x30A30)]
+        public bool isAstrea;
+    }
 }
