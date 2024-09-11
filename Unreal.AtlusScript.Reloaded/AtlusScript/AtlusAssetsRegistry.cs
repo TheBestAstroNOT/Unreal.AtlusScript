@@ -20,7 +20,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         Log.Information($"Registering assets from: {mod.ModId}");
         if (Directory.Exists(mod.DefaultAssetsDir))
         {
-            this.AddAssetsFolder(mod.DefaultAssetsDir);
+            this.AddAssetsFolder(mod.DefaultAssetsDir, AssetMode.Default);
         }
 
         if (Directory.Exists(mod.AstreaAssetsDir))
@@ -70,7 +70,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         // Recursively process nested folders.
         foreach (var dir in Directory.EnumerateDirectories(assetsDir))
         {
-            this.AddAssetsFolder(dir);
+            this.AddAssetsFolder(dir, mode);
         }
     }
 
