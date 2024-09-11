@@ -57,6 +57,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
             msgAsset.Sync();
 
             this.assetContainers.Add(msgAsset);
+            Log.Information($"Registered MSG ({mode}): {msgAsset.Name}");
         }
 
         foreach (var flowFile in Directory.EnumerateFiles(assetsDir, "*.flow"))
@@ -65,6 +66,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
             flowAsset.Sync();
 
             this.assetContainers.Add(flowAsset);
+            Log.Information($"Registered BF ({mode}): {flowAsset.Name}");
         }
 
         // Recursively process nested folders.
