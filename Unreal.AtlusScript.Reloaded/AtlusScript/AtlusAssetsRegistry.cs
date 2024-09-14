@@ -76,9 +76,13 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         }
     }
 
-    public void AddAsset(string name, string content, AssetType type)
-        => this.AddAsset(name, content, type, AssetMode.Default);
+    public void AddAsset(string name, string content, AssetType type) => this.AddAsset(name, content, type, AssetMode.Default);
 
     public void AddAsset(string name, string content, AssetType type, AssetMode mode)
-        => this.assetContainers.Add(new TextAssetContainer(this.compiler, name, type == AssetType.BF, content) { Mode = mode });
+    {
+        var asset = new TextAssetContainer(this.compiler, name, type == AssetType.BF, content) { Mode = mode };
+        asset.Sync();
+
+        this.assetContainers.Add(asset);
+    }
 }

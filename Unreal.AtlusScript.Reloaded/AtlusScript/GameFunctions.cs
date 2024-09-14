@@ -15,12 +15,12 @@ internal unsafe class GameFunctions
             (hooks, result) => this.getGlobalWork = hooks.CreateWrapper<GetGlobalWork>(result, out _));
     }
 
-    public bool IsAstrea() => this.getGlobalWork!()->isAstrea;
+    public bool IsPlayingAstrea() => this.getGlobalWork!()->isPlayingAstrea;
 
     [StructLayout(LayoutKind.Explicit)]
     private struct UGlobalWork
     {
-        [FieldOffset(0x30A30)]
-        public bool isAstrea;
+        [FieldOffset(0x30A40)]
+        public bool isPlayingAstrea;
     }
 }

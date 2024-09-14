@@ -99,7 +99,8 @@ internal unsafe class AtlusScriptService
             }
         }
 
-        if (this.assetsRegistry.TryGetAsset(this.game.IsAstrea() ? AssetMode.Astrea : AssetMode.Default, obj.Name, out var data))
+        var mode = this.game.IsPlayingAstrea() ? AssetMode.Astrea : AssetMode.Default;
+        if (this.assetsRegistry.TryGetAsset(mode, obj.Name, out var data))
         {
             var objAsset = (UAtlusScriptAsset*)obj.Self;
 
@@ -109,7 +110,7 @@ internal unsafe class AtlusScriptService
             objAsset->mBuf.Num = data.Length;
             objAsset->mBuf.Max = data.Length;
             objAsset->mBuf.AllocatorInstance = (byte*)buffer;
-            Log.Debug($"Using custom asset: {obj.Name}");
+            Log.Debug($"Custom Asset ({mode}): {obj.Name}");
         };
     }
 
