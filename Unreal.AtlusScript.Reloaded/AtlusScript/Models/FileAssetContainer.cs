@@ -6,7 +6,7 @@ internal class FileAssetContainer : BaseAssetContainer
 {
     private readonly string file;
     private readonly FileSystemWatcher watcher;
-    private readonly Timer timer = new(1000) { AutoReset = false };
+    private readonly Timer timer = new(500) { AutoReset = false };
 
 
     public FileAssetContainer(AtlusAssetCompiler compiler, string file)
