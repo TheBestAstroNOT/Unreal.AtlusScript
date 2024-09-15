@@ -52,7 +52,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\submodules\Atlus-Script-Tools\Source\AtlusScriptLibrary\AtlusScriptLibrary.csproj" />
-    <ProjectReference Include="..\submodules\Project.Utils\Project.Utils.csproj" />
     <ProjectReference Include="..\Unreal.AtlusScript.Interfaces\Unreal.AtlusScript.Interfaces.csproj" />
   </ItemGroup>
 
