@@ -4,31 +4,16 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript;
 
 internal unsafe class GameFunctions
 {
-    private delegate UGlobalWork* GetGlobalWork();
-    private GetGlobalWork? getGlobalWork;
+    private delegate bool IsAstreaSave();
+    private IsAstreaSave? isAstreaSave;
 
     public GameFunctions()
     {
         ScanHooks.Add(
-            nameof(GetGlobalWork),
-            "48 89 5C 24 ?? 57 48 83 EC 20 48 8B 0D ?? ?? ?? ?? 33 DB",
-            (hooks, result) => this.getGlobalWork = hooks.CreateWrapper<GetGlobalWork>(result, out _));
+            nameof(IsAstreaSave),
+            "48 83 EC 28 E8 ?? ?? ?? ?? 48 85 C0 74 ?? E8 ?? ?? ?? ?? 48 8B C8 E8 ?? ?? ?? ?? 3C 01 0F 94 C0 48 83 C4 28 C3 48 83 C4 28 C3",
+            (hooks, result) => this.isAstreaSave = hooks.CreateWrapper<IsAstreaSave>(result, out _));
     }
 
-    public bool IsPlayingAstrea()
-    {
-        var gwork = this.getGlobalWork!();
-        Log.Information($"Playing Astrea: {gwork->isPlayingAstrea}\nAstrea Save: {gwork->isAstreaSave}");
-        return this.getGlobalWork!()->isPlayingAstrea;
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    private struct UGlobalWork
-    {
-        [FieldOffset(0x30A30)]
-        public bool isPlayingAstrea;
-
-        [FieldOffset(0x30A40)]
-        public bool isAstreaSave;
-    }
+    public bool IsAstrea() => this.isAstreaSave!();
 }

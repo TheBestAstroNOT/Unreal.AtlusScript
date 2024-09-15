@@ -99,7 +99,7 @@ internal unsafe class AtlusScriptService
             }
         }
 
-        var mode = this.game.IsPlayingAstrea() ? AssetMode.Astrea : AssetMode.Default;
+        var mode = this.game.IsAstrea() ? AssetMode.Astrea : AssetMode.Default;
         if (this.assetsRegistry.TryGetAsset(mode, obj.Name, out var data))
         {
             var objAsset = (UAtlusScriptAsset*)obj.Self;
