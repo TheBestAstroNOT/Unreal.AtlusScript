@@ -18,14 +18,16 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     public void RegisterMod(AssetsMod mod)
     {
         Log.Information($"Registering assets from: {mod.ModId}");
-        if (Directory.Exists(mod.DefaultAssetsDir))
+        foreach (var file in Directory.EnumerateFiles(mod.DefaultAssetsDir, "*.*", SearchOption.AllDirectories))
         {
-            this.AddAssetsFolder(mod.DefaultAssetsDir, AssetMode.Default);
-        }
-
-        if (Directory.Exists(mod.AstreaAssetsDir))
-        {
-            this.AddAssetsFolder(mod.AstreaAssetsDir, AssetMode.Astrea);
+            if (file.StartsWith(mod.AstreaAssetsDir))
+            {
+                this.AddAssetFile(file, AssetMode.Astrea);
+            }
+            else
+            {
+                this.AddAssetFile(file, AssetMode.Default);
+            }
         }
     }
 
@@ -51,28 +53,30 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     public void AddAssetsFolder(string assetsDir, AssetMode mode)
     {
         // Process folder.
-        foreach (var msgFile in Directory.EnumerateFiles(assetsDir, "*.msg"))
+        foreach (var file in Directory.EnumerateFiles(assetsDir, "*.*", SearchOption.AllDirectories))
         {
-            var msgAsset = new FileAssetContainer(this.compiler, msgFile) { Mode = mode };
+            this.AddAssetFile(file, mode);
+        }
+    }
+
+    private void AddAssetFile(string file, AssetMode mode)
+    {
+        var ext = Path.GetExtension(file);
+        if (ext.Equals(".msg", StringComparison.OrdinalIgnoreCase))
+        {
+            var msgAsset = new FileAssetContainer(this.compiler, file) { Mode = mode };
             msgAsset.Sync();
 
             this.assetContainers.Add(msgAsset);
             Log.Information($"Registered MSG ({mode}): {msgAsset.Name}");
         }
-
-        foreach (var flowFile in Directory.EnumerateFiles(assetsDir, "*.flow"))
+        else if (ext.Equals(".flow", StringComparison.OrdinalIgnoreCase))
         {
-            var flowAsset = new FileAssetContainer(this.compiler, flowFile) { Mode = mode };
+            var flowAsset = new FileAssetContainer(this.compiler, file) { Mode = mode };
             flowAsset.Sync();
 
             this.assetContainers.Add(flowAsset);
             Log.Information($"Registered BF ({mode}): {flowAsset.Name}");
-        }
-
-        // Recursively process nested folders.
-        foreach (var dir in Directory.EnumerateDirectories(assetsDir))
-        {
-            this.AddAssetsFolder(dir, mode);
         }
     }
 
