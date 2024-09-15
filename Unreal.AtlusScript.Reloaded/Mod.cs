@@ -46,7 +46,7 @@ public class Mod : ModBase, IExports
         Debugger.Launch();
 #endif
 
-        Log.Initialize(NAME, this.log, Color.White);
+        Project.Init(this.modConfig, this.modLoader, this.log, true);
         Log.LogLevel = this.config.LogLevel;
 
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
@@ -67,10 +67,11 @@ public class Mod : ModBase, IExports
         this.atlusRegistry = new(assetCompiler);
         this.atlusScript = new(uobjects!, unreal!, this.atlusRegistry, flowDecompiler, gameLibrary, modDir);
 
-        ScanHooks.Initialize(scanner!, hooks!);
         this.modLoader.AddOrReplaceController<IAtlusAssets>(this.owner, this.atlusRegistry);
         this.modLoader.ModLoading += this.OnModLoading;
         this.ApplyConfig();
+
+        Project.Start();
     }
 
     private void OnModLoading(IModV1 mod, IModConfigV1 config)

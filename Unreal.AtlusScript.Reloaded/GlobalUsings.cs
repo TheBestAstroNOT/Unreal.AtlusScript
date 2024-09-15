@@ -1,1 +1,1 @@
-﻿global using Project.Utils;
+﻿global using RyoTune.Reloaded;
