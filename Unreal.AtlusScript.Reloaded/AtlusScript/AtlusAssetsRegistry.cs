@@ -18,7 +18,12 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     public void RegisterMod(AssetsMod mod)
     {
         Log.Information($"Registering assets from: {mod.ModId}");
-        foreach (var file in Directory.EnumerateFiles(mod.DefaultAssetsDir, "*.*", SearchOption.AllDirectories))
+        if (Directory.Exists(mod.BaseAssetsDir) == false)
+        {
+            return;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(mod.BaseAssetsDir, "*.*", SearchOption.AllDirectories))
         {
             if (file.StartsWith(mod.AstreaAssetsDir))
             {
