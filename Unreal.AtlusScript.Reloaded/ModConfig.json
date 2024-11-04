@@ -1,8 +1,8 @@
 {
   "ModId": "Unreal.AtlusScript.Reloaded",
   "ModName": "Unreal Atlus Script",
-  "ModAuthor": "zutomayofan50",
-  "ModVersion": "1.1.6",
+  "ModAuthor": "RyoTune",
+  "ModVersion": "1.1.7",
   "ModDescription": "Edit Atlus Script objects from source files.",
   "ModDll": "Unreal.AtlusScript.Reloaded.dll",
   "ModIcon": "Preview.png",
@@ -18,6 +18,15 @@
   "PluginData": {
     "GitHubDependencies": {
       "IdToConfigMap": {
+        "Reloaded.Memory.SigScan.ReloadedII": {
+          "Config": {
+            "UserName": "Reloaded-Project",
+            "RepositoryName": "Reloaded.Memory.SigScan",
+            "UseReleaseTag": false,
+            "AssetFileName": "Mod.zip"
+          },
+          "ReleaseMetadataName": "Reloaded.Memory.SigScan.ReloadedII.ReleaseMetadata.json"
+        },
         "reloaded.sharedlib.hooks": {
           "Config": {
             "UserName": "Sewer56",
@@ -27,38 +36,29 @@
           },
           "ReleaseMetadataName": "Sewer56.Update.ReleaseMetadata.json"
         },
-        "Reloaded.Memory.SigScan.ReloadedII": {
-          "Config": {
-            "UserName": "Reloaded-Project",
-            "RepositoryName": "Reloaded.Memory.SigScan",
-            "UseReleaseTag": false,
-            "AssetFileName": "Mod.zip"
-          },
-          "ReleaseMetadataName": "Reloaded.Memory.SigScan.ReloadedII.ReleaseMetadata.json"
-        }
-      }
-    },
-    "GameBananaDependencies": {
-      "IdToConfigMap": {
         "Unreal.ObjectsEmitter.Reloaded": {
           "Config": {
-            "ItemType": "Mod",
-            "ItemId": 500638
+            "UserName": "RyoTune",
+            "RepositoryName": "Unreal.ObjectsEmitter",
+            "UseReleaseTag": false,
+            "AssetFileName": "Mod.zip"
           },
           "ReleaseMetadataName": "Unreal.ObjectsEmitter.Reloaded.ReleaseMetadata.json"
         }
       }
     },
-    "GameBanana": {
-      "ItemType": "Mod",
-      "ItemId": 501844
+    "GitHubRelease": {
+      "UserName": "RyoTune",
+      "RepositoryName": "Unreal.AtlusScript",
+      "UseReleaseTag": false,
+      "AssetFileName": "Mod.zip"
     }
   },
   "IsUniversalMod": false,
   "ModDependencies": [
+    "Reloaded.Memory.SigScan.ReloadedII",
     "reloaded.sharedlib.hooks",
-    "Unreal.ObjectsEmitter.Reloaded",
-    "Reloaded.Memory.SigScan.ReloadedII"
+    "Unreal.ObjectsEmitter.Reloaded"
   ],
   "OptionalDependencies": [],
   "SupportedAppId": [
