@@ -46,20 +46,19 @@ public enum Decomp_Endianess
 
 public enum AssetConfigLanguage
 {
-    English,
-    Korean,
-    Japanese,
-    SimplifiedChinese,
-    TraditionalChinese,
-    French,
-    Italian,
-    German,
-    Polish,
-    Spanish,
-    Portuguese,
-    Russian,
-    Turkish,
-    Universal,
+    EN,
+    KO,
+    JA,
+    ZH_HANS,
+    ZH_HANT,
+    FR,
+    IT,
+    DE,
+    PL,
+    ES,
+    PT,
+    RU,
+    TR,
     Disabled
 }
 

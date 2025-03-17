@@ -61,7 +61,6 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         {
             return lang;
         }
-
         return ESystemLanguage.EN;
     }
 
@@ -80,9 +79,16 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     }
 
     private BaseAssetContainer? GetAssetForMode(AssetMode mode, string assetName, ESystemLanguage currentAssetLang)
-    => assetContainers.TryGetValue(currentAssetLang, out var assets) || assetContainers.TryGetValue(ESystemLanguage.EN, out assets)
-        ? assets.FirstOrDefault(x => (x.Mode == mode || x.Mode == AssetMode.Both) && x.Name.Equals(assetName, StringComparison.OrdinalIgnoreCase))
-        : null;
+    {
+        if(assetContainers.TryGetValue(currentAssetLang, out var assets))
+        {
+           return assets.FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
+        }
+        else
+        {
+           return assetContainers[ESystemLanguage.EN].FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
+        }
+    }
 
     [Obsolete("Use RegisterAssetsFolder instead.")]
     public void AddAssetsFolder(string assetsDir) => this.AddAssetsFolder(assetsDir, AssetMode.Default);

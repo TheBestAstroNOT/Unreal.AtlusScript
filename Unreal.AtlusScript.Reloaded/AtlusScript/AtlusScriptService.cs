@@ -11,7 +11,6 @@ using Unreal.AtlusScript.Reloaded.AtlusScript.Types;
 using Unreal.AtlusScript.Reloaded.Configuration;
 using Unreal.ObjectsEmitter.Interfaces;
 using Unreal.ObjectsEmitter.Interfaces.Types;
-using static Unreal.AtlusScript.Reloaded.AtlusScript.AtlusAssetsRegistry;
 
 namespace Unreal.AtlusScript.Reloaded.AtlusScript;
 
@@ -31,6 +30,8 @@ internal unsafe class AtlusScriptService
     private DumpType dumpBmds;
     private DumpType dumpBfs;
     private Decomp_Endianess decompBfEndian;
+    private ESystemLanguage gameLanguage;
+    private bool isGameLangInitialized;
 
     public AtlusScriptService(
         IUObjects uobjects,
@@ -50,6 +51,24 @@ internal unsafe class AtlusScriptService
         this.dumpDir = Directory.CreateDirectory(Path.Join(modDir, "dump")).FullName;
         uobjects.ObjectCreated += this.OnObjectCreated;
         _GetLanguage = new SHFunction<GetLanguage>("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 83 EC 30 E8");        
+    }
+
+    private void GetGameLanguage()
+    {
+        if (configuration.Override_Asset_Locale != AssetConfigLanguage.Disabled)
+        {
+            ESystemLanguage? currentLanguage = _GetLanguage.OriginalFunction();
+            if (currentLanguage == null)
+            {
+                Log.Warning("Unable to retrieve game language, assuming game language to be English");
+            }
+            gameLanguage = currentLanguage ?? ESystemLanguage.EN;
+        }
+        else
+        {
+            gameLanguage = (ESystemLanguage)configuration.Override_Asset_Locale;
+        }
+        isGameLangInitialized = true;
     }
 
     private void OnObjectCreated(UnrealObject obj)
@@ -108,17 +127,11 @@ internal unsafe class AtlusScriptService
         }
 
         var mode = this.game.IsAstrea() ? AssetMode.Astrea : AssetMode.Default;
-        ESystemLanguage currentLang = ESystemLanguage.EN;
-        if (configuration.Override_Asset_Locale == AssetConfigLanguage.Disabled)
+        if(!isGameLangInitialized)
         {
-            currentLang = _GetLanguage.OriginalFunction();
+            GetGameLanguage();
         }
-        else
-        {
-            currentLang = (ESystemLanguage)configuration.Override_Asset_Locale;
-        }
-
-        if (this.assetsRegistry.TryGetAsset(mode, obj.Name, out var data, currentLang))
+        if (this.assetsRegistry.TryGetAsset(mode, obj.Name, out var data, gameLanguage))
         {
             var objAsset = (UAtlusScriptAsset*)obj.Self;
 
