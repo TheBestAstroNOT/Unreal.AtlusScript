@@ -11,6 +11,7 @@ using Unreal.AtlusScript.Reloaded.AtlusScript.Types;
 using Unreal.AtlusScript.Reloaded.Configuration;
 using Unreal.ObjectsEmitter.Interfaces;
 using Unreal.ObjectsEmitter.Interfaces.Types;
+using static Unreal.AtlusScript.Reloaded.AtlusScript.AtlusAssetsRegistry;
 
 namespace Unreal.AtlusScript.Reloaded.AtlusScript;
 
@@ -100,7 +101,8 @@ internal unsafe class AtlusScriptService
         }
 
         var mode = this.game.IsAstrea() ? AssetMode.Astrea : AssetMode.Default;
-        if (this.assetsRegistry.TryGetAsset(mode, obj.Name, out var data))
+        var currentLang = AssetLanguage.Unknown;
+        if (this.assetsRegistry.TryGetAsset(mode, obj.Name, out var data, currentLang))
         {
             var objAsset = (UAtlusScriptAsset*)obj.Self;
 

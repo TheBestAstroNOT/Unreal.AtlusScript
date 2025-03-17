@@ -8,7 +8,22 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript;
 internal unsafe class AtlusAssetsRegistry : IAtlusAssets
 {
     private readonly AtlusAssetCompiler compiler;
-    private readonly List<BaseAssetContainer> assetContainers = [];
+    public enum AssetLanguage
+    {
+        English,
+        Unknown
+    }
+
+    private readonly Dictionary<string, AssetLanguage> languageRegistry = new()
+    {
+        {"en", AssetLanguage.English}
+    };
+
+    private readonly Dictionary<AssetLanguage, List<BaseAssetContainer>> assetContainers = new() 
+    {
+        {AssetLanguage.English, []},
+        {AssetLanguage.Unknown, []}
+    };
 
     public AtlusAssetsRegistry(AtlusAssetCompiler compiler)
     {
@@ -36,7 +51,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         }
     }
 
-    public bool TryGetAsset(AssetMode mode, string assetName, [NotNullWhen(true)]out byte[]? assetData)
+    public bool TryGetAsset(AssetMode mode, string assetName, [NotNullWhen(true)]out byte[]? assetData, AssetLanguage currentAssetLang)
     {
         var asset = GetAssetForMode(mode, assetName);
 
@@ -50,8 +65,8 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         return true;
     }
 
-    private BaseAssetContainer? GetAssetForMode(AssetMode mode, string assetName)
-        => this.assetContainers.FirstOrDefault(x => (x.Mode == mode || x.Mode == AssetMode.Both) && x.Name.Equals(assetName, StringComparison.OrdinalIgnoreCase));
+    private BaseAssetContainer? GetAssetForMode(AssetMode mode, string assetName, AssetLanguage currentAssetLang = AssetLanguage.Unknown)
+        => this.assetContainers[currentAssetLang].FirstOrDefault(x => (x.Mode == mode || x.Mode == AssetMode.Both) && x.Name.Equals(assetName, StringComparison.OrdinalIgnoreCase));
 
     public void AddAssetsFolder(string assetsDir) => this.AddAssetsFolder(assetsDir, AssetMode.Default);
 
@@ -67,21 +82,20 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     private void AddAssetFile(string file, AssetMode mode)
     {
         var ext = Path.GetExtension(file);
+        AssetLanguage currentAssetLang = languageRegistry.ContainsKey(Path.GetDirectoryName(file).ToLower()) ? languageRegistry[Path.GetDirectoryName(file).ToLower()] : AssetLanguage.Unknown;
         if (ext.Equals(".msg", StringComparison.OrdinalIgnoreCase))
         {
             var msgAsset = new FileAssetContainer(this.compiler, file) { Mode = mode };
             msgAsset.Sync();
-
-            this.assetContainers.Add(msgAsset);
-            Log.Information($"Registered MSG ({mode}): {msgAsset.Name}");
+            this.assetContainers[currentAssetLang].Add(msgAsset);
+            Log.Information($"Registered MSG ({mode}): {msgAsset.Name}, Language: {currentAssetLang.ToString()}");
         }
         else if (ext.Equals(".flow", StringComparison.OrdinalIgnoreCase))
         {
             var flowAsset = new FileAssetContainer(this.compiler, file) { Mode = mode };
             flowAsset.Sync();
-
-            this.assetContainers.Add(flowAsset);
-            Log.Information($"Registered BF ({mode}): {flowAsset.Name}");
+            this.assetContainers[currentAssetLang].Add(flowAsset);
+            Log.Information($"Registered BF ({mode}): {flowAsset.Name}, Language: {currentAssetLang.ToString()}");
         }
     }
 
@@ -92,6 +106,6 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         var asset = new TextAssetContainer(this.compiler, name, type == AssetType.BF, content) { Mode = mode };
         asset.Sync();
 
-        this.assetContainers.Add(asset);
+        this.assetContainers[AssetLanguage.Unknown].Add(asset);
     }
 }
