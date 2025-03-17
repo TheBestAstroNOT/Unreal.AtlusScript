@@ -17,6 +17,9 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript;
 
 internal unsafe class AtlusScriptService
 {
+    private delegate ESystemLanguage GetLanguage();
+    private readonly SHFunction<GetLanguage>? _GetLanguage;
+
     private readonly IUnreal unreal;
     private readonly AtlusAssetsRegistry assetsRegistry;
     private readonly FlowScriptDecompiler flowDecompiler;
@@ -43,6 +46,8 @@ internal unsafe class AtlusScriptService
         this.game = new();
         this.dumpDir = Directory.CreateDirectory(Path.Join(modDir, "dump")).FullName;
         uobjects.ObjectCreated += this.OnObjectCreated;
+
+        _GetLanguage = new SHFunction<GetLanguage>("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 83 EC 30 E8");
     }
 
     private void OnObjectCreated(UnrealObject obj)
