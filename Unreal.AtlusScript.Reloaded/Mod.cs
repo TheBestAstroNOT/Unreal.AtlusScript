@@ -8,7 +8,6 @@ using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
 using System.Diagnostics;
-using System.Drawing;
 using System.Text;
 using Unreal.AtlusScript.Interfaces;
 using Unreal.AtlusScript.Reloaded.AtlusScript;
@@ -65,7 +64,7 @@ public class Mod : ModBase, IExports
 
         var assetCompiler = new AtlusAssetCompiler(flowCompiler, msgCompiler);
         this.atlusRegistry = new(assetCompiler);
-        this.atlusScript = new(uobjects!, unreal!, this.atlusRegistry, flowDecompiler, gameLibrary, modDir);
+        this.atlusScript = new(uobjects!, unreal!, this.atlusRegistry, flowDecompiler, gameLibrary, modDir, config);
 
         this.modLoader.AddOrReplaceController<IAtlusAssets>(this.owner, this.atlusRegistry);
         this.modLoader.ModLoading += this.OnModLoading;

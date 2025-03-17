@@ -7,6 +7,7 @@ public interface IAtlusAssets
     /// For default (Xrd777) game scripts only.
     /// </summary>
     /// <param name="assetsDir">Assets folder.</param>
+    [Obsolete("Use RegisterAssetsFolder instead.")]
     void AddAssetsFolder(string assetsDir);
 
     /// <summary>
@@ -14,6 +15,22 @@ public interface IAtlusAssets
     /// </summary>
     /// <param name="assetsDir">Assets folder.</param>
     /// <param name="mode">Registration mode.</param>
+    /// <param name="lang">Asset language.</param>
+    void RegisterAssetsFolder(string assetsDir, AssetMode mode, ESystemLanguage lang);
+
+    /// <summary>
+    /// Add a folder to register Atlus assets from.
+    /// </summary>
+    /// <param name="assetsDir">Assets folder.</param>
+    /// <param name="lang">Asset language.</param>
+    void RegisterAssetsFolder(string assetsDir, ESystemLanguage lang);
+
+    /// <summary>
+    /// Add a folder to register Atlus assets from.
+    /// </summary>
+    /// <param name="assetsDir">Assets folder.</param>
+    /// <param name="mode">Registration mode.</param>
+    [Obsolete("Use RegisterAssetsFolder instead.")]
     void AddAssetsFolder(string assetsDir, AssetMode mode);
 
     /// <summary>
@@ -47,3 +64,20 @@ public enum AssetMode
     Astrea,
     Both,
 }
+
+public enum ESystemLanguage : byte
+{
+    JA = 0,
+    EN = 1,
+    FR = 2,
+    IT = 3,
+    DE = 4,
+    ES = 5,
+    ZH_HANS = 6,
+    ZH_HANT = 7,
+    KO = 8,
+    RU = 9,
+    PT = 10,
+    TR = 11,
+    PL = 12,
+};

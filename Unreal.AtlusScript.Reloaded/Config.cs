@@ -23,6 +23,11 @@ public class Config : Configurable<Config>
     [Description("Set what endianess to use when decompiling BFs. Default is to try both if one fails, with BE first.")]
     [DefaultValue(Decomp_Endianess.Both)]
     public Decomp_Endianess Decomp_BF_Endian { get; set; } = Decomp_Endianess.Both;
+
+    [DisplayName("Override Asset Locale")]
+    [Description("Override the locale of assets to load.")]
+    [DefaultValue(AssetConfigLanguage.Disabled)]
+    public AssetConfigLanguage Override_Asset_Locale { get; set; } = AssetConfigLanguage.Disabled;
 }
 
 public enum DumpType
@@ -37,6 +42,25 @@ public enum Decomp_Endianess
     Both,
     BIG_ENDIAN,
     LITTLE_ENDIAN,
+}
+
+public enum AssetConfigLanguage
+{
+    English,
+    Korean,
+    Japanese,
+    SimplifiedChinese,
+    TraditionalChinese,
+    French,
+    Italian,
+    German,
+    Polish,
+    Spanish,
+    Portuguese,
+    Russian,
+    Turkish,
+    Universal,
+    Disabled
 }
 
 /// <summary>

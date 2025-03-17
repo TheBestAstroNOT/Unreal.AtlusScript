@@ -27,6 +27,7 @@ internal unsafe class AtlusScriptService
     private readonly GameFunctions game;
     private readonly string dumpDir;
 
+    private Config configuration;
     private DumpType dumpBmds;
     private DumpType dumpBfs;
     private Decomp_Endianess decompBfEndian;
@@ -37,17 +38,18 @@ internal unsafe class AtlusScriptService
         AtlusAssetsRegistry registry,
         FlowScriptDecompiler flowDecompiler,
         Library gameLibrary,
-        string modDir)
+        string modDir,
+        Config config)
     {
         this.unreal = unreal;
         this.assetsRegistry = registry;
         this.flowDecompiler = flowDecompiler;
         this.gameLibrary = gameLibrary;
         this.game = new();
+        this.configuration = config;
         this.dumpDir = Directory.CreateDirectory(Path.Join(modDir, "dump")).FullName;
         uobjects.ObjectCreated += this.OnObjectCreated;
-
-        _GetLanguage = new SHFunction<GetLanguage>("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 83 EC 30 E8");
+        _GetLanguage = new SHFunction<GetLanguage>("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 83 EC 30 E8");        
     }
 
     private void OnObjectCreated(UnrealObject obj)
@@ -106,7 +108,16 @@ internal unsafe class AtlusScriptService
         }
 
         var mode = this.game.IsAstrea() ? AssetMode.Astrea : AssetMode.Default;
-        var currentLang = AssetLanguage.Unknown;
+        ESystemLanguage currentLang = ESystemLanguage.EN;
+        if (configuration.Override_Asset_Locale == AssetConfigLanguage.Disabled)
+        {
+            currentLang = _GetLanguage.OriginalFunction();
+        }
+        else
+        {
+            currentLang = (ESystemLanguage)configuration.Override_Asset_Locale;
+        }
+
         if (this.assetsRegistry.TryGetAsset(mode, obj.Name, out var data, currentLang))
         {
             var objAsset = (UAtlusScriptAsset*)obj.Self;
@@ -118,7 +129,8 @@ internal unsafe class AtlusScriptService
             objAsset->mBuf.Max = data.Length;
             objAsset->mBuf.AllocatorInstance = (byte*)buffer;
             Log.Debug($"Custom Asset ({mode}): {obj.Name}");
-        };
+        }
+        ;
     }
 
     private static void DumpBinaryData(TArray<byte> data, string outputFile)
