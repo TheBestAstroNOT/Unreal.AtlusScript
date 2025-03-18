@@ -30,8 +30,7 @@ internal unsafe class AtlusScriptService
     private DumpType dumpBmds;
     private DumpType dumpBfs;
     private Decomp_Endianess decompBfEndian;
-    private ESystemLanguage gameLanguage;
-    private bool isGameLangInitialized;
+    private ESystemLanguage? gameLanguage;
 
     public AtlusScriptService(
         IUObjects uobjects,
@@ -57,18 +56,13 @@ internal unsafe class AtlusScriptService
     {
         if (configuration.Override_Asset_Locale != AssetConfigLanguage.Disabled)
         {
-            ESystemLanguage? currentLanguage = _GetLanguage.OriginalFunction();
-            if (currentLanguage == null)
-            {
-                Log.Warning("Unable to retrieve game language, assuming game language to be English");
-            }
-            gameLanguage = currentLanguage ?? ESystemLanguage.EN;
+            ESystemLanguage currentLanguage = _GetLanguage!.OriginalFunction();
+            gameLanguage = currentLanguage;
         }
         else
         {
             gameLanguage = (ESystemLanguage)configuration.Override_Asset_Locale;
         }
-        isGameLangInitialized = true;
     }
 
     private void OnObjectCreated(UnrealObject obj)
@@ -127,11 +121,11 @@ internal unsafe class AtlusScriptService
         }
 
         var mode = this.game.IsAstrea() ? AssetMode.Astrea : AssetMode.Default;
-        if(!isGameLangInitialized)
+        if(gameLanguage==null)
         {
             GetGameLanguage();
         }
-        if (this.assetsRegistry.TryGetAsset(mode, obj.Name, out var data, gameLanguage))
+        if (this.assetsRegistry.TryGetAsset(mode, obj.Name, out var data, (ESystemLanguage)gameLanguage!))
         {
             var objAsset = (UAtlusScriptAsset*)obj.Self;
 
