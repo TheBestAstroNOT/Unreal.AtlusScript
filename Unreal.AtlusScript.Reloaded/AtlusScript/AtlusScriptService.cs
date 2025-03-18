@@ -52,17 +52,10 @@ internal unsafe class AtlusScriptService
         _GetLanguage = new SHFunction<GetLanguage>("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 83 EC 30 E8");        
     }
 
-    private void GetGameLanguage()
+    private ESystemLanguage GetGameLanguage()
     {
-        if (configuration.Override_Asset_Locale != AssetConfigLanguage.Disabled)
-        {
-            ESystemLanguage currentLanguage = _GetLanguage!.OriginalFunction();
-            gameLanguage = currentLanguage;
-        }
-        else
-        {
-            gameLanguage = (ESystemLanguage)configuration.Override_Asset_Locale;
-        }
+        gameLanguage ??= _GetLanguage!.OriginalFunction();
+        return (ESystemLanguage)gameLanguage;
     }
 
     private void OnObjectCreated(UnrealObject obj)

@@ -27,7 +27,7 @@ public class Config : Configurable<Config>
     [DisplayName("Override Asset Locale")]
     [Description("Override the locale of assets to load.")]
     [DefaultValue(AssetConfigLanguage.Disabled)]
-    public AssetConfigLanguage Override_Asset_Locale { get; set; } = AssetConfigLanguage.Disabled;
+    public AssetConfigLanguage OverrideAssetLocale { get; set; } = AssetConfigLanguage.Disabled;
 }
 
 public enum DumpType
