@@ -39,17 +39,23 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
             return;
         }
 
-        foreach (var file in Directory.EnumerateFiles(mod.BaseAssetsDir, "*.*", SearchOption.AllDirectories))
+        foreach (var dir in Directory.EnumerateDirectories(mod.BaseAssetsDir, "*", SearchOption.AllDirectories))
         {
-            if (file.StartsWith(mod.AstreaAssetsDir))
+            if (dir.StartsWith(mod.AstreaAssetsDir))
             {
-                ESystemLanguage filelang = GetFileLang(mod.AstreaAssetsDir, file);
-                this.AddAssetFile(file, AssetMode.Astrea, filelang);
+                ESystemLanguage dirLang = GetFileLang(mod.AstreaAssetsDir, dir);
+                foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
+                {
+                    this.AddAssetFile(file, AssetMode.Astrea, dirLang);
+                }
             }
             else
             {
-                ESystemLanguage filelang = GetFileLang(mod.BaseAssetsDir, file);
-                this.AddAssetFile(file, AssetMode.Default, filelang);
+                ESystemLanguage dirLang = GetFileLang(mod.BaseAssetsDir, dir);
+                foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
+                {
+                    this.AddAssetFile(file, AssetMode.Default, dirLang);
+                }
             }
         }
     }
