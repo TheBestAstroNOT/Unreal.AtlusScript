@@ -39,24 +39,31 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
             return;
         }
 
-        foreach (var dir in Directory.EnumerateDirectories(mod.BaseAssetsDir, "*", SearchOption.AllDirectories))
+        foreach (var topdir in Directory.EnumerateDirectories(mod.BaseAssetsDir, "*", SearchOption.TopDirectoryOnly))
         {
-            if (dir.StartsWith(mod.AstreaAssetsDir))
+            if (topdir.StartsWith(mod.AstreaAssetsDir))
             {
-                ESystemLanguage dirLang = GetFileLang(mod.AstreaAssetsDir, dir);
-                foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
+                foreach(var dir in Directory.EnumerateDirectories(topdir, "*", SearchOption.TopDirectoryOnly))
                 {
-                    this.AddAssetFile(file, AssetMode.Astrea, dirLang);
+                    ESystemLanguage dirLang = GetFileLang(mod.AstreaAssetsDir, dir);
+                    foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
+                    {
+                        this.AddAssetFile(file, AssetMode.Astrea, dirLang);
+                    }
                 }
             }
             else
             {
-                ESystemLanguage dirLang = GetFileLang(mod.BaseAssetsDir, dir);
-                foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
+                ESystemLanguage dirLang = GetFileLang(mod.BaseAssetsDir, topdir);
+                foreach (var file in Directory.EnumerateFiles(topdir, "*.*", SearchOption.AllDirectories))
                 {
                     this.AddAssetFile(file, AssetMode.Default, dirLang);
                 }
             }
+        }
+        foreach(var basedirfile in Directory.EnumerateFiles(mod.BaseAssetsDir, "*.*", SearchOption.TopDirectoryOnly))
+        {
+            this.AddAssetFile(basedirfile, AssetMode.Default, ESystemLanguage.EN);
         }
     }
 
