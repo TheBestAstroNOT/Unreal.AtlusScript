@@ -54,8 +54,16 @@ internal unsafe class AtlusScriptService
 
     private ESystemLanguage GetGameLanguage()
     {
-        gameLanguage ??= _GetLanguage!.OriginalFunction();
-        return (ESystemLanguage)gameLanguage;
+        try
+        {
+            gameLanguage ??= _GetLanguage!.OriginalFunction();
+            Log.Debug($"Set game language to: {gameLanguage}");
+            return (ESystemLanguage)gameLanguage;
+        }
+        catch
+        {
+            throw new Exception("Failed to get game language");
+        }
     }
 
     private void OnObjectCreated(UnrealObject obj)
@@ -116,21 +124,21 @@ internal unsafe class AtlusScriptService
         var mode = this.game.IsAstrea() ? AssetMode.Astrea : AssetMode.Default;
         if(gameLanguage==null)
         {
+            Log.Debug("Trying to get game language");
             GetGameLanguage();
         }
         if (this.assetsRegistry.TryGetAsset(mode, obj.Name, out var data, (ESystemLanguage)gameLanguage!))
         {
-            var objAsset = (UAtlusScriptAsset*)obj.Self;
+                var objAsset = (UAtlusScriptAsset*)obj.Self;
 
-            var buffer = this.unreal.FMalloc(data.Length, 0);
-            Marshal.Copy(data, 0, buffer, data.Length);
+                var buffer = this.unreal.FMalloc(data.Length, 0);
+                Marshal.Copy(data, 0, buffer, data.Length);
 
-            objAsset->mBuf.Num = data.Length;
-            objAsset->mBuf.Max = data.Length;
-            objAsset->mBuf.AllocatorInstance = (byte*)buffer;
-            Log.Debug($"Custom Asset ({mode}): {obj.Name}");
+                objAsset->mBuf.Num = data.Length;
+                objAsset->mBuf.Max = data.Length;
+                objAsset->mBuf.AllocatorInstance = (byte*)buffer;
+                Log.Debug($"Custom Asset ({mode}): {obj.Name}");
         }
-        ;
     }
 
     private static void DumpBinaryData(TArray<byte> data, string outputFile)

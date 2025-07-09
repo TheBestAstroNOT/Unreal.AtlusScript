@@ -93,14 +93,12 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
 
     private BaseAssetContainer? GetAssetForMode(AssetMode mode, string assetName, ESystemLanguage currentAssetLang)
     {
-        if(assetContainers.TryGetValue(currentAssetLang, out var assets))
+        var asset = assetContainers[currentAssetLang].FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
+        if (asset == null)
         {
-           return assets.FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
+            return assetContainers[ESystemLanguage.EN].FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
         }
-        else
-        {
-           return assetContainers[ESystemLanguage.EN].FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
-        }
+        return asset;
     }
 
     [Obsolete("Use RegisterAssetsFolder instead.")]
@@ -135,14 +133,14 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
             var msgAsset = new FileAssetContainer(this.compiler, file) { Mode = mode };
             msgAsset.Sync();
             this.assetContainers[currentAssetLang].Add(msgAsset);
-            Log.Information($"Registered MSG ({mode}): {msgAsset.Name}, Language: {currentAssetLang.ToString()}");
+            Log.Information($"Registered MSG ({mode}): {msgAsset.Name}, Language: {currentAssetLang}");
         }
         else if (ext.Equals(".flow", StringComparison.OrdinalIgnoreCase))
         {
             var flowAsset = new FileAssetContainer(this.compiler, file) { Mode = mode };
             flowAsset.Sync();
             this.assetContainers[currentAssetLang].Add(flowAsset);
-            Log.Information($"Registered BF ({mode}): {flowAsset.Name}, Language: {currentAssetLang.ToString()}");
+            Log.Information($"Registered BF ({mode}): {flowAsset.Name}, Language: {currentAssetLang}");
         }
     }
 
