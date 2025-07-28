@@ -6,12 +6,14 @@ internal abstract class BaseAssetContainer
 {
     private readonly AtlusAssetCompiler compiler;
     private readonly bool isFlow;
+    public readonly bool isUniversal;
 
-    protected BaseAssetContainer(AtlusAssetCompiler compiler, string name, bool isFlow)
+    protected BaseAssetContainer(AtlusAssetCompiler compiler, string name, bool isFlow, bool isUniversal)
     {
         this.compiler = compiler;
         this.isFlow = isFlow;
         this.Name = name;
+        this.isUniversal = isUniversal;
     }
 
     public string Name { get; }

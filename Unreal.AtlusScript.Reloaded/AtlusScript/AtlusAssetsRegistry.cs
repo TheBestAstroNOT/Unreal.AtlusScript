@@ -34,37 +34,64 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     public void RegisterMod(AssetsMod mod)
     {
         Log.Information($"Registering assets from: {mod.ModId}");
-        if (Directory.Exists(mod.BaseAssetsDir) == false)
+        if (Directory.Exists(mod.BaseAssetsDir))
         {
-            return;
-        }
-
-        foreach (var topdir in Directory.EnumerateDirectories(mod.BaseAssetsDir, "*", SearchOption.TopDirectoryOnly))
-        {
-            if (topdir.StartsWith(mod.AstreaAssetsDir))
+            foreach (var topdir in Directory.EnumerateDirectories(mod.BaseAssetsDir, "*", SearchOption.TopDirectoryOnly))
             {
-                foreach(var dir in Directory.EnumerateDirectories(topdir, "*", SearchOption.TopDirectoryOnly))
+                if (topdir.StartsWith(mod.AstreaAssetsDir))
                 {
-                    ESystemLanguage dirLang = GetFileLang(mod.AstreaAssetsDir, dir);
-                    foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
+                    foreach (var dir in Directory.EnumerateDirectories(topdir, "*", SearchOption.TopDirectoryOnly))
                     {
-                        this.AddAssetFile(file, AssetMode.Astrea, dirLang);
+                        ESystemLanguage dirLang = GetFileLang(mod.AstreaAssetsDir, dir);
+                        foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
+                        {
+                            this.AddAssetFile(file, AssetMode.Astrea, dirLang, true);
+                        }
+                    }
+                }
+                else
+                {
+                    ESystemLanguage dirLang = GetFileLang(mod.BaseAssetsDir, topdir);
+                    foreach (var file in Directory.EnumerateFiles(topdir, "*.*", SearchOption.AllDirectories))
+                    {
+                        this.AddAssetFile(file, AssetMode.Default, dirLang, true);
                     }
                 }
             }
-            else
+            foreach (var basedirfile in Directory.EnumerateFiles(mod.BaseAssetsDir, "*.*", SearchOption.TopDirectoryOnly))
             {
-                ESystemLanguage dirLang = GetFileLang(mod.BaseAssetsDir, topdir);
-                foreach (var file in Directory.EnumerateFiles(topdir, "*.*", SearchOption.AllDirectories))
-                {
-                    this.AddAssetFile(file, AssetMode.Default, dirLang);
-                }
+                this.AddAssetFile(basedirfile, AssetMode.Default, ESystemLanguage.EN, true);
             }
         }
-        foreach(var basedirfile in Directory.EnumerateFiles(mod.BaseAssetsDir, "*.*", SearchOption.TopDirectoryOnly))
+        if(Directory.Exists(mod.ModernBaseAssetsDir))
         {
-            this.AddAssetFile(basedirfile, AssetMode.Default, ESystemLanguage.EN);
-        }
+            foreach (var topdir in Directory.EnumerateDirectories(mod.ModernBaseAssetsDir, "*", SearchOption.TopDirectoryOnly))
+            {
+                if (topdir.StartsWith(mod.ModernAstreaAssetsDir))
+                {
+                    foreach (var dir in Directory.EnumerateDirectories(topdir, "*", SearchOption.TopDirectoryOnly))
+                    {
+                        ESystemLanguage dirLang = GetFileLang(mod.ModernAstreaAssetsDir, dir);
+                        foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
+                        {
+                            this.AddAssetFile(file, AssetMode.Astrea, dirLang, false);
+                        }
+                    }
+                }
+                else
+                {
+                    ESystemLanguage dirLang = GetFileLang(mod.ModernBaseAssetsDir, topdir);
+                    foreach (var file in Directory.EnumerateFiles(topdir, "*.*", SearchOption.AllDirectories))
+                    {
+                        this.AddAssetFile(file, AssetMode.Default, dirLang, false);
+                    }
+                }
+            }
+            foreach (var basedirfile in Directory.EnumerateFiles(mod.ModernBaseAssetsDir, "*.*", SearchOption.TopDirectoryOnly))
+            {
+                this.AddAssetFile(basedirfile, AssetMode.Default, ESystemLanguage.EN, false);
+            }
+        }   
     }
 
     private static ESystemLanguage GetFileLang(string assetFolder, string file)
@@ -96,7 +123,11 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         var asset = assetContainers[currentAssetLang].FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
         if (asset == null)
         {
-            return assetContainers[ESystemLanguage.EN].FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
+            asset = assetContainers[ESystemLanguage.EN].FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
+            if(asset != null && !asset.isUniversal)
+            {
+                return null;
+            }
         }
         return asset;
     }
@@ -110,37 +141,37 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         // Process folder.
         foreach (var file in Directory.EnumerateFiles(assetsDir, "*.*", SearchOption.AllDirectories))
         {
-            this.AddAssetFile(file, mode, ESystemLanguage.EN);
+            this.AddAssetFile(file, mode, ESystemLanguage.EN, true);
         }
     }
 
-    public void RegisterAssetsFolder(string assetsDir, ESystemLanguage lang) => this.RegisterAssetsFolder(assetsDir, AssetMode.Default, lang);
+    public void RegisterAssetsFolder(string assetsDir, ESystemLanguage lang, bool isUniversal) => this.RegisterAssetsFolder(assetsDir, AssetMode.Default, lang, isUniversal);
 
-    public void RegisterAssetsFolder(string assetsDir, AssetMode mode, ESystemLanguage currentAssetLang)
+    public void RegisterAssetsFolder(string assetsDir, AssetMode mode, ESystemLanguage currentAssetLang, bool isUniversal)
     {
         // Process folder.
         foreach (var file in Directory.EnumerateFiles(assetsDir, "*.*", SearchOption.AllDirectories))
         {
-            this.AddAssetFile(file, mode, currentAssetLang);
+            this.AddAssetFile(file, mode, currentAssetLang, isUniversal);
         }
     }
 
-    private void AddAssetFile(string file, AssetMode mode, ESystemLanguage currentAssetLang)
+    private void AddAssetFile(string file, AssetMode mode, ESystemLanguage currentAssetLang, bool isUniversal)
     {
         var ext = Path.GetExtension(file);
         if (ext.Equals(".msg", StringComparison.OrdinalIgnoreCase))
         {
-            var msgAsset = new FileAssetContainer(this.compiler, file) { Mode = mode };
+            var msgAsset = new FileAssetContainer(this.compiler, file, isUniversal) { Mode = mode };
             msgAsset.Sync();
             this.assetContainers[currentAssetLang].Add(msgAsset);
-            Log.Information($"Registered MSG ({mode}): {msgAsset.Name}, Language: {currentAssetLang}");
+            Log.Verbose($"Registered MSG ({mode}): {msgAsset.Name}, Language: {currentAssetLang}");
         }
         else if (ext.Equals(".flow", StringComparison.OrdinalIgnoreCase))
         {
-            var flowAsset = new FileAssetContainer(this.compiler, file) { Mode = mode };
+            var flowAsset = new FileAssetContainer(this.compiler, file, isUniversal) { Mode = mode };
             flowAsset.Sync();
             this.assetContainers[currentAssetLang].Add(flowAsset);
-            Log.Information($"Registered BF ({mode}): {flowAsset.Name}, Language: {currentAssetLang}");
+            Log.Verbose($"Registered BF ({mode}): {flowAsset.Name}, Language: {currentAssetLang}");
         }
     }
 
