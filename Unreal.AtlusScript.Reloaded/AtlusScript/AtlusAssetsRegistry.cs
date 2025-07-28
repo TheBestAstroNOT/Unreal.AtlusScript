@@ -12,7 +12,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     private readonly Dictionary<ESystemLanguage, List<BaseAssetContainer>> assetContainers = new() 
     {
         {ESystemLanguage.EN, []},
-        {ESystemLanguage.JA, []},
+        {ESystemLanguage.JP, []},
         {ESystemLanguage.KO, []},
         {ESystemLanguage.ZH_HANS, []},
         {ESystemLanguage.ZH_HANT, []},

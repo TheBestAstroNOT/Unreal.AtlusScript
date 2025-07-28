@@ -69,7 +69,7 @@ public enum AssetMode
 
 public enum ESystemLanguage : byte
 {
-    JA = 0,
+    JP = 0,
     EN = 1,
     FR = 2,
     IT = 3,
