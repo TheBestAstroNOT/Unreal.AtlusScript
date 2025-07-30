@@ -45,7 +45,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
                         ESystemLanguage dirLang = GetFileLang(mod.AstreaAssetsDir, dir);
                         foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
                         {
-                            this.AddAssetFile(file, AssetMode.Astrea, dirLang, true);
+                            this.AddAssetFile(file, AssetMode.Astrea, dirLang, false);
                         }
                     }
                 }
@@ -54,42 +54,13 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
                     ESystemLanguage dirLang = GetFileLang(mod.BaseAssetsDir, topdir);
                     foreach (var file in Directory.EnumerateFiles(topdir, "*.*", SearchOption.AllDirectories))
                     {
-                        this.AddAssetFile(file, AssetMode.Default, dirLang, true);
+                        this.AddAssetFile(file, AssetMode.Default, dirLang, false);
                     }
                 }
             }
             foreach (var basedirfile in Directory.EnumerateFiles(mod.BaseAssetsDir, "*.*", SearchOption.TopDirectoryOnly))
             {
                 this.AddAssetFile(basedirfile, AssetMode.Default, ESystemLanguage.EN, true);
-            }
-        }
-        if(Directory.Exists(mod.ModernBaseAssetsDir))
-        {
-            foreach (var topdir in Directory.EnumerateDirectories(mod.ModernBaseAssetsDir, "*", SearchOption.TopDirectoryOnly))
-            {
-                if (topdir.StartsWith(mod.ModernAstreaAssetsDir))
-                {
-                    foreach (var dir in Directory.EnumerateDirectories(topdir, "*", SearchOption.TopDirectoryOnly))
-                    {
-                        ESystemLanguage dirLang = GetFileLang(mod.ModernAstreaAssetsDir, dir);
-                        foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
-                        {
-                            this.AddAssetFile(file, AssetMode.Astrea, dirLang, false);
-                        }
-                    }
-                }
-                else
-                {
-                    ESystemLanguage dirLang = GetFileLang(mod.ModernBaseAssetsDir, topdir);
-                    foreach (var file in Directory.EnumerateFiles(topdir, "*.*", SearchOption.AllDirectories))
-                    {
-                        this.AddAssetFile(file, AssetMode.Default, dirLang, false);
-                    }
-                }
-            }
-            foreach (var basedirfile in Directory.EnumerateFiles(mod.ModernBaseAssetsDir, "*.*", SearchOption.TopDirectoryOnly))
-            {
-                this.AddAssetFile(basedirfile, AssetMode.Default, ESystemLanguage.EN, false);
             }
         }   
     }
