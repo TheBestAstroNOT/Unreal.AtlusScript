@@ -62,6 +62,13 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
             {
                 this.AddAssetFile(basedirfile, AssetMode.Default, ESystemLanguage.EN, true);
             }
+            if (Directory.Exists(mod.AstreaAssetsDir))
+            {
+                foreach (var astreadirfile in Directory.EnumerateFiles(mod.AstreaAssetsDir, "*.*", SearchOption.TopDirectoryOnly))
+                {
+                    this.AddAssetFile(astreadirfile, AssetMode.Astrea, ESystemLanguage.EN, true);
+                }
+            }
         }   
     }
 
