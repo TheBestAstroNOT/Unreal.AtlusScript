@@ -1,4 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using Unreal.AtlusScript.Interfaces;
 using Unreal.AtlusScript.Reloaded.AtlusScript.Models;
 using Unreal.AtlusScript.Reloaded.AtlusScript.Types;
@@ -8,7 +11,13 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript;
 internal unsafe class AtlusAssetsRegistry : IAtlusAssets
 {
     private readonly AtlusAssetCompiler compiler;
+    private readonly FileCacheRegistry fileCache;
+    private readonly SHA1 sha1;
 
+    //Generate blank active asset list
+    //Populate with assets from mods (one of each asset per language)
+    //Check if asset path and date modified matches cache. If cached then load cache else compile asset.
+    //Load cache and compiled assets into active asset list.
     private readonly Dictionary<ESystemLanguage, List<BaseAssetContainer>> assetContainers = new() 
     {
         {ESystemLanguage.EN, []},
@@ -23,17 +32,28 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         {ESystemLanguage.PT, []},
         {ESystemLanguage.RU, []},
         {ESystemLanguage.ES, []},
-        {ESystemLanguage.TR, []}
+        {ESystemLanguage.TR, []},
+        {ESystemLanguage.UNIVERSAL, []}
     };
 
-    public AtlusAssetsRegistry(AtlusAssetCompiler compiler)
+    public AtlusAssetsRegistry(AtlusAssetCompiler compiler, FileCacheRegistry fileCache)
     {
         this.compiler = compiler;
+        this.fileCache = fileCache;
+        sha1 = System.Security.Cryptography.SHA1.Create();
     }
 
     public void RegisterMod(AssetsMod mod)
     {
         Log.Information($"Registering assets from: {mod.ModId}");
+        if (fileCache.TryGetCacheByModID(mod.ModId.ToLower(), out var cacheContent))
+        {
+            foreach (var cacheKey in cacheContent)
+            {
+                LoadAssetCache(cacheKey.Key, cacheKey.Value, mod);
+            }
+        }
+
         if (Directory.Exists(mod.BaseAssetsDir))
         {
             foreach (var topdir in Directory.EnumerateDirectories(mod.BaseAssetsDir, "*", SearchOption.TopDirectoryOnly))
@@ -45,7 +65,10 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
                         ESystemLanguage dirLang = GetFileLang(mod.AstreaAssetsDir, dir);
                         foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
                         {
-                            this.AddAssetFile(file, AssetMode.Astrea, dirLang, false);
+                            var identifier = new FileIdentifier(Path.GetFileName(file), dirLang, AssetMode.Astrea);
+                            if (cacheContent.ContainsKey(identifier))
+                                continue;
+                            this.AddAssetFile(file, AssetMode.Astrea, dirLang, mod);
                         }
                     }
                 }
@@ -54,19 +77,28 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
                     ESystemLanguage dirLang = GetFileLang(mod.BaseAssetsDir, topdir);
                     foreach (var file in Directory.EnumerateFiles(topdir, "*.*", SearchOption.AllDirectories))
                     {
-                        this.AddAssetFile(file, AssetMode.Default, dirLang, false);
+                        var identifier = new FileIdentifier(Path.GetFileName(file), dirLang, AssetMode.Default);
+                        if (cacheContent.ContainsKey(identifier))
+                            continue;
+                        this.AddAssetFile(file, AssetMode.Default, dirLang, mod);
                     }
                 }
             }
             foreach (var basedirfile in Directory.EnumerateFiles(mod.BaseAssetsDir, "*.*", SearchOption.TopDirectoryOnly))
             {
-                this.AddAssetFile(basedirfile, AssetMode.Default, ESystemLanguage.EN, true);
+                var identifier = new FileIdentifier(Path.GetFileName(basedirfile), ESystemLanguage.UNIVERSAL, AssetMode.Default);
+                if (cacheContent.ContainsKey(identifier))
+                    continue;
+                this.AddAssetFile(basedirfile, AssetMode.Default, ESystemLanguage.UNIVERSAL, mod);
             }
             if (Directory.Exists(mod.AstreaAssetsDir))
             {
                 foreach (var astreadirfile in Directory.EnumerateFiles(mod.AstreaAssetsDir, "*.*", SearchOption.TopDirectoryOnly))
                 {
-                    this.AddAssetFile(astreadirfile, AssetMode.Astrea, ESystemLanguage.EN, true);
+                    var identifier = new FileIdentifier(Path.GetFileName(astreadirfile), ESystemLanguage.UNIVERSAL, AssetMode.Astrea);
+                    if (cacheContent.ContainsKey(identifier))
+                        continue;
+                    this.AddAssetFile(astreadirfile, AssetMode.Astrea, ESystemLanguage.UNIVERSAL, mod);
                 }
             }
         }   
@@ -101,8 +133,8 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         var asset = assetContainers[currentAssetLang].FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
         if (asset == null)
         {
-            asset = assetContainers[ESystemLanguage.EN].FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
-            if(asset != null && !asset.isUniversal)
+            asset = assetContainers[ESystemLanguage.UNIVERSAL].FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
+            if(asset != null)
             {
                 return null;
             }
@@ -119,37 +151,93 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         // Process folder.
         foreach (var file in Directory.EnumerateFiles(assetsDir, "*.*", SearchOption.AllDirectories))
         {
-            this.AddAssetFile(file, mode, ESystemLanguage.EN, true);
+            this.AddAssetFile(file, mode, ESystemLanguage.UNIVERSAL);
         }
     }
 
-    public void RegisterAssetsFolder(string assetsDir, ESystemLanguage lang, bool isUniversal) => this.RegisterAssetsFolder(assetsDir, AssetMode.Default, lang, isUniversal);
+    public void RegisterAssetsFolder(string assetsDir, ESystemLanguage lang) => this.RegisterAssetsFolder(assetsDir, AssetMode.Default, lang);
 
-    public void RegisterAssetsFolder(string assetsDir, AssetMode mode, ESystemLanguage currentAssetLang, bool isUniversal)
+    public void RegisterAssetsFolder(string assetsDir, AssetMode mode, ESystemLanguage currentAssetLang)
     {
         // Process folder.
         foreach (var file in Directory.EnumerateFiles(assetsDir, "*.*", SearchOption.AllDirectories))
         {
-            this.AddAssetFile(file, mode, currentAssetLang, isUniversal);
+            this.AddAssetFile(file, mode, currentAssetLang);
         }
     }
 
-    private void AddAssetFile(string file, AssetMode mode, ESystemLanguage currentAssetLang, bool isUniversal)
+    private void AddAssetFile(string file, AssetMode mode, ESystemLanguage currentAssetLang, AssetsMod? modData = null)
     {
         var ext = Path.GetExtension(file);
         if (ext.Equals(".msg", StringComparison.OrdinalIgnoreCase))
         {
-            var msgAsset = new FileAssetContainer(this.compiler, file, isUniversal) { Mode = mode };
+            var msgAsset = new FileAssetContainer(this.compiler, file) { Mode = mode };
             msgAsset.Sync();
             this.assetContainers[currentAssetLang].Add(msgAsset);
-            Log.Verbose($"Registered MSG ({mode}): {msgAsset.Name}, Language: {currentAssetLang}");
+            if (modData != null && msgAsset.Data != null)
+            {
+                byte[] hashBytes = sha1.ComputeHash(Encoding.UTF8.GetBytes(Path.GetFileName(file)));
+                string hashedName = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+                fileCache.AddCacheByModID(modData.ModId, new CachedFile
+                {
+                    sourceName = Path.GetFileName(file),
+                    sourceModID = modData.ModId,
+                    sourceDirectory = Path.GetDirectoryName(Path.GetRelativePath(modData.ModDir, file)) ?? string.Empty,
+                    language = currentAssetLang,
+                    assetMode = mode,
+                    hashedName = hashedName
+                });
+                string filePath = Path.Combine(fileCache.CacheFolder, modData.ModId.ToLower(), (currentAssetLang.ToString() != "UNIVERSAL") ? currentAssetLang.ToString().ToLower() : string.Empty, mode.ToString().ToLower(), hashedName);
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? string.Empty);
+                File.WriteAllBytes(filePath, msgAsset.Data);
+                fileCache.Save();
+            }
+            Log.Debug($"Registered MSG ({mode}): {msgAsset.Name}, language: {currentAssetLang}");
         }
         else if (ext.Equals(".flow", StringComparison.OrdinalIgnoreCase))
         {
-            var flowAsset = new FileAssetContainer(this.compiler, file, isUniversal) { Mode = mode };
+            var flowAsset = new FileAssetContainer(this.compiler, file) { Mode = mode };
             flowAsset.Sync();
             this.assetContainers[currentAssetLang].Add(flowAsset);
-            Log.Verbose($"Registered BF ({mode}): {flowAsset.Name}, Language: {currentAssetLang}");
+            if (modData != null && flowAsset.Data != null)
+            {
+                byte[] hashBytes = sha1.ComputeHash(Encoding.UTF8.GetBytes(Path.GetFileName(file)));
+                string hashedName = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+                fileCache.AddCacheByModID(modData.ModId, new CachedFile
+                {
+                    sourceName = Path.GetFileName(file),
+                    sourceModID = modData.ModId,
+                    sourceDirectory = Path.GetDirectoryName(Path.GetRelativePath(modData.ModDir, file)) ?? string.Empty,
+                    language = currentAssetLang,
+                    assetMode = mode,
+                    hashedName = hashedName
+                });
+                string filePath = Path.Combine(fileCache.CacheFolder, modData.ModId.ToLower(), (currentAssetLang.ToString() != "UNIVERSAL") ? currentAssetLang.ToString().ToLower() : string.Empty, mode.ToString().ToLower(), hashedName);
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? string.Empty);
+                File.WriteAllBytes(filePath, flowAsset.Data);
+                fileCache.Save();
+            }
+            Log.Debug($"Registered BF ({mode}): {flowAsset.Name}, language: {currentAssetLang}");
+        }
+    }
+
+    private void LoadAssetCache(FileIdentifier identifier, Tuple<string, ReadOnlyMemory<byte>> data, AssetsMod modData)
+    {
+        Log.Verbose($"Loading cached asset: {identifier.Name} ");
+        var ext = Path.GetExtension(identifier.Name);
+        if (ext.Equals(".msg", StringComparison.OrdinalIgnoreCase))
+        {
+            var msgAsset = new FileAssetContainer(this.compiler, Path.Combine(modData.ModDir, data.Item1, identifier.Name)) { Mode = identifier.AssetMode };
+            msgAsset.SyncCache(data.Item2.ToArray());
+            this.assetContainers[identifier.Language].Add(msgAsset);
+            Log.Debug($"Registered MSG from Cache ({msgAsset.Mode}): {msgAsset.Name}, language: {identifier.Language.ToString()}");
+        }
+        else if (ext.Equals(".flow", StringComparison.OrdinalIgnoreCase))
+        {
+            var flowAsset = new FileAssetContainer(this.compiler, Path.Combine(modData.ModDir, data.Item1, identifier.Name)) { Mode = identifier.AssetMode };
+            flowAsset.SyncCache(data.Item2.ToArray());
+            this.assetContainers[identifier.Language].Add(flowAsset);
+            Log.Debug($"Registered BF from Cache ({flowAsset.Mode}): {flowAsset.Name}, language: {identifier.Language.ToString()}");
         }
     }
 

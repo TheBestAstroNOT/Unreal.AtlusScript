@@ -9,8 +9,10 @@ using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 using Unreal.AtlusScript.Interfaces;
 using Unreal.AtlusScript.Reloaded.AtlusScript;
+using Unreal.AtlusScript.Reloaded.AtlusScript.Models;
 using Unreal.AtlusScript.Reloaded.Configuration;
 using Unreal.AtlusScript.Reloaded.Template;
 using Unreal.ObjectsEmitter.Interfaces;
@@ -63,7 +65,41 @@ public class Mod : ModBase, IExports
         var flowCompiler = new FlowScriptCompiler(AtlusScriptLibrary.FlowScriptLanguage.FormatVersion.Version4BigEndian) { Encoding = Encoding.UTF8, Library = gameLibrary };
 
         var assetCompiler = new AtlusAssetCompiler(flowCompiler, msgCompiler);
-        this.atlusRegistry = new(assetCompiler);
+
+        //Generate/Load the file cache registry
+        string jsonPath = Path.Combine(modDir, "CacheRegistry.json");
+        FileCacheRegistry registry;
+        if (File.Exists(jsonPath))
+        {
+            var json = File.ReadAllText(jsonPath);
+            registry = JsonSerializer.Deserialize<FileCacheRegistry>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = false,
+            }) ?? new FileCacheRegistry();
+            registry.CacheFolder = Path.Combine(modDir, "Cache");
+            if (registry.Version != modConfig.ModVersion)
+            {
+                Log.Warning($"Cache registry version mismatch. Expected: {modConfig.ModVersion}, Found: {registry.Version}. Recreating cache registry.");
+                File.Delete(jsonPath);
+                Directory.Delete(registry.CacheFolder, true);
+                registry = new FileCacheRegistry();
+                registry.CacheFolder = Path.Combine(modDir, "Cache");
+                registry.Version = modConfig.ModVersion;
+            }
+            registry.ModsFolder = Path.GetDirectoryName(modDir) ?? string.Empty;
+            registry.RootFolder = modDir;
+            registry.Save();
+        }
+        else
+        {
+            registry = new FileCacheRegistry();
+            registry.CacheFolder = Path.Combine(modDir, "Cache");
+            registry.ModsFolder = Path.GetDirectoryName(modDir) ?? string.Empty;
+            registry.RootFolder = modDir;
+            registry.Save();
+        }
+        this.atlusRegistry = new(assetCompiler, registry);
         this.atlusScript = new(uobjects!, unreal!, this.atlusRegistry, flowDecompiler, gameLibrary, modDir, config);
 
         this.modLoader.AddOrReplaceController<IAtlusAssets>(this.owner, this.atlusRegistry);

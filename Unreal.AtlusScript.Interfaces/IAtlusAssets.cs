@@ -16,16 +16,14 @@ public interface IAtlusAssets
     /// <param name="assetsDir">Assets folder.</param>
     /// <param name="mode">Registration mode.</param>
     /// <param name="lang">Asset language.</param>
-    /// <param name="isUniversal">Enables fallback to english assets if true.</param>
-    void RegisterAssetsFolder(string assetsDir, AssetMode mode, ESystemLanguage lang, bool isUniversal);
+    void RegisterAssetsFolder(string assetsDir, AssetMode mode, ESystemLanguage lang);
 
     /// <summary>
     /// Add a folder to register Atlus assets from.
     /// </summary>
     /// <param name="assetsDir">Assets folder.</param>
     /// <param name="lang">Asset language.</param>
-    /// <param name="isUniversal">Enables fallback to english assets if true.</param>
-    void RegisterAssetsFolder(string assetsDir, ESystemLanguage lang, bool isUniversal);
+    void RegisterAssetsFolder(string assetsDir, ESystemLanguage lang);
 
     /// <summary>
     /// Add a folder to register Atlus assets from.
@@ -82,4 +80,5 @@ public enum ESystemLanguage : byte
     PT = 10,
     TR = 11,
     PL = 12,
+    UNIVERSAL
 };

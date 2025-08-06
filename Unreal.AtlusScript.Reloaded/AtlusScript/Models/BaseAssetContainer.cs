@@ -6,14 +6,12 @@ internal abstract class BaseAssetContainer
 {
     private readonly AtlusAssetCompiler compiler;
     private readonly bool isFlow;
-    public readonly bool isUniversal;
 
-    protected BaseAssetContainer(AtlusAssetCompiler compiler, string name, bool isFlow, bool isUniversal)
+    protected BaseAssetContainer(AtlusAssetCompiler compiler, string name, bool isFlow)
     {
         this.compiler = compiler;
         this.isFlow = isFlow;
         this.Name = name;
-        this.isUniversal = isUniversal;
     }
 
     public string Name { get; }
@@ -38,6 +36,16 @@ internal abstract class BaseAssetContainer
         if (this.Data != null)
         {
             Log.Debug($"{this.Name}: Updated data from source.");
+        }
+    }
+
+    public void SyncCache(byte[] cachedData)
+    {
+        this.Data = cachedData;
+
+        if (this.Data != null)
+        {
+            Log.Debug($"{this.Name}: Updated data from cached source.");
         }
     }
 }
