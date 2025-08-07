@@ -50,7 +50,10 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         {
             foreach (var cacheKey in cacheContent)
             {
-                LoadAssetCache(cacheKey.Key, cacheKey.Value, mod);
+                if(!LoadAssetCache(cacheKey.Key, cacheKey.Value, mod))
+                {
+                    cacheContent.Remove(cacheKey.Key);
+                }
             }
         }
 
@@ -221,23 +224,32 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         }
     }
 
-    private void LoadAssetCache(FileIdentifier identifier, Tuple<string, ReadOnlyMemory<byte>> data, AssetsMod modData)
+    private bool LoadAssetCache(FileIdentifier identifier, Tuple<string, ReadOnlyMemory<byte>> data, AssetsMod modData)
     {
         Log.Verbose($"Loading cached asset: {identifier.Name} ");
         var ext = Path.GetExtension(identifier.Name);
-        if (ext.Equals(".msg", StringComparison.OrdinalIgnoreCase))
-        {
-            var msgAsset = new FileAssetContainer(this.compiler, Path.Combine(modData.ModDir, data.Item1, identifier.Name)) { Mode = identifier.AssetMode };
-            msgAsset.SyncCache(data.Item2.ToArray());
-            this.assetContainers[identifier.Language].Add(msgAsset);
-            Log.Debug($"Registered MSG from Cache ({msgAsset.Mode}): {msgAsset.Name}, language: {identifier.Language.ToString()}");
+        string filePath = Path.Combine(modData.ModDir, data.Item1, identifier.Name);
+        if (File.Exists(filePath)) {
+            if (ext.Equals(".msg", StringComparison.OrdinalIgnoreCase))
+            {
+                var msgAsset = new FileAssetContainer(this.compiler, filePath) { Mode = identifier.AssetMode };
+                msgAsset.SyncCache(data.Item2.ToArray());
+                this.assetContainers[identifier.Language].Add(msgAsset);
+                Log.Debug($"Registered MSG from Cache ({msgAsset.Mode}): {msgAsset.Name}, language: {identifier.Language.ToString()}");
+            }
+            else if (ext.Equals(".flow", StringComparison.OrdinalIgnoreCase))
+            {
+                var flowAsset = new FileAssetContainer(this.compiler, filePath) { Mode = identifier.AssetMode };
+                flowAsset.SyncCache(data.Item2.ToArray());
+                this.assetContainers[identifier.Language].Add(flowAsset);
+                Log.Debug($"Registered BF from Cache ({flowAsset.Mode}): {flowAsset.Name}, language: {identifier.Language.ToString()}");
+            }
+            return true;
         }
-        else if (ext.Equals(".flow", StringComparison.OrdinalIgnoreCase))
+        else
         {
-            var flowAsset = new FileAssetContainer(this.compiler, Path.Combine(modData.ModDir, data.Item1, identifier.Name)) { Mode = identifier.AssetMode };
-            flowAsset.SyncCache(data.Item2.ToArray());
-            this.assetContainers[identifier.Language].Add(flowAsset);
-            Log.Debug($"Registered BF from Cache ({flowAsset.Mode}): {flowAsset.Name}, language: {identifier.Language.ToString()}");
+            Log.Debug($"Failed to load asset from Cache ({identifier.AssetMode}): {identifier.Name}, language: {identifier.Language.ToString()}");
+            return false;
         }
     }
 
