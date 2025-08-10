@@ -76,13 +76,16 @@ public class Mod : ModBase, IExports
             {
                 PropertyNameCaseInsensitive = true,
                 WriteIndented = false,
-            }) ?? new FileCacheRegistry();
+            }) ?? new FileCacheRegistry() {Version = modConfig.ModVersion};
             registry.CacheFolder = Path.Combine(modDir, "Cache");
             if (registry.Version != modConfig.ModVersion)
             {
                 Log.Warning($"Cache registry version mismatch. Expected: {modConfig.ModVersion}, Found: {registry.Version}. Recreating cache registry.");
                 File.Delete(jsonPath);
-                Directory.Delete(registry.CacheFolder, true);
+                if (Directory.Exists(registry.CacheFolder))
+                {
+                    Directory.Delete(registry.CacheFolder, true);
+                }
                 registry = new FileCacheRegistry();
                 registry.CacheFolder = Path.Combine(modDir, "Cache");
                 registry.Version = modConfig.ModVersion;
