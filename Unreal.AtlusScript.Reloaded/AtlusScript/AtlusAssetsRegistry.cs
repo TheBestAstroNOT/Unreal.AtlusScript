@@ -259,6 +259,6 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     {
         var asset = new TextAssetContainer(this.compiler, name, type == AssetType.BF, content) { Mode = mode };
         asset.Sync();
-        this.assetContainers[ESystemLanguage.EN].Add(asset);
+        this.assetContainers[ESystemLanguage.UNIVERSAL].Add(asset);
     }
 }
