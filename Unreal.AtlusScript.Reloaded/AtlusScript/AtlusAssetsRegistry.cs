@@ -136,7 +136,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         var asset = assetContainers[currentAssetLang].FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
         if (asset == null)
         {
-            asset = assetContainers[ESystemLanguage.UNIVERSAL].FirstOrDefault(a => a.Name == assetName && a.Mode == mode);
+            asset = assetContainers[ESystemLanguage.UNIVERSAL].FirstOrDefault(a => a.Name == assetName && (a.Mode == mode || a.Mode == AssetMode.Both));
         }
         return asset;
     }
