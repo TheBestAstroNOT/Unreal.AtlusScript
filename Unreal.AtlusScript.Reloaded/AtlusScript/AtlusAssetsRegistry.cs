@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using Reloaded.Mod.Interfaces;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -46,17 +47,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     public void RegisterMod(AssetsMod mod)
     {
         Log.Information($"Registering assets from: {mod.ModId}");
-        if (fileCache.TryGetCacheByModID(mod.ModId.ToLower(), out var cacheContent))
-        {
-            foreach (var cacheKey in cacheContent)
-            {
-                if(!LoadAssetCache(cacheKey.Key, cacheKey.Value, mod))
-                {
-                    cacheContent.Remove(cacheKey.Key);
-                }
-            }
-        }
-
+        fileCache.TryGetCacheByModID(mod.ModId.ToLower(), out var cacheContent);
         if (Directory.Exists(mod.BaseAssetsDir))
         {
             foreach (var topdir in Directory.EnumerateDirectories(mod.BaseAssetsDir, "*", SearchOption.TopDirectoryOnly))
@@ -70,7 +61,16 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
                         {
                             var identifier = new FileIdentifier(Path.GetFileName(file), dirLang, AssetMode.Astrea);
                             if (cacheContent.ContainsKey(identifier))
-                                continue;
+                            {
+                                if (!LoadAssetCache(identifier, cacheContent[identifier], mod))
+                                {
+                                    cacheContent.Remove(identifier);
+                                }
+                                else
+                                {
+                                    continue;
+                                }
+                            }
                             this.AddAssetFile(file, AssetMode.Astrea, dirLang, mod);
                         }
                     }
@@ -82,7 +82,16 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
                     {
                         var identifier = new FileIdentifier(Path.GetFileName(file), dirLang, AssetMode.Default);
                         if (cacheContent.ContainsKey(identifier))
-                            continue;
+                        {
+                            if (!LoadAssetCache(identifier, cacheContent[identifier], mod))
+                            {
+                                cacheContent.Remove(identifier);
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
                         this.AddAssetFile(file, AssetMode.Default, dirLang, mod);
                     }
                 }
@@ -91,7 +100,16 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
             {
                 var identifier = new FileIdentifier(Path.GetFileName(basedirfile), ESystemLanguage.UNIVERSAL, AssetMode.Default);
                 if (cacheContent.ContainsKey(identifier))
-                    continue;
+                {
+                    if (!LoadAssetCache(identifier, cacheContent[identifier], mod))
+                    {
+                        cacheContent.Remove(identifier);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
                 this.AddAssetFile(basedirfile, AssetMode.Default, ESystemLanguage.UNIVERSAL, mod);
             }
             if (Directory.Exists(mod.AstreaAssetsDir))
@@ -100,7 +118,16 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
                 {
                     var identifier = new FileIdentifier(Path.GetFileName(astreadirfile), ESystemLanguage.UNIVERSAL, AssetMode.Astrea);
                     if (cacheContent.ContainsKey(identifier))
-                        continue;
+                    {
+                        if (!LoadAssetCache(identifier, cacheContent[identifier], mod))
+                        {
+                            cacheContent.Remove(identifier);
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
                     this.AddAssetFile(astreadirfile, AssetMode.Astrea, ESystemLanguage.UNIVERSAL, mod);
                 }
             }
@@ -156,12 +183,36 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
 
     public void RegisterAssetsFolder(string assetsDir, ESystemLanguage lang) => this.RegisterAssetsFolder(assetsDir, AssetMode.Default, lang);
 
-    public void RegisterAssetsFolder(string assetsDir, AssetMode mode, ESystemLanguage currentAssetLang)
+    public void RegisterAssetsFolder(string assetsDir, AssetMode mode, ESystemLanguage lang)
     {
         // Process folder.
         foreach (var file in Directory.EnumerateFiles(assetsDir, "*.*", SearchOption.AllDirectories))
         {
-            this.AddAssetFile(file, mode, currentAssetLang);
+            this.AddAssetFile(file, mode, lang);
+        }
+    }
+
+    public void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData, ESystemLanguage lang) => this.RegisterAssetsFolderWithModData(assetsDir, modData, AssetMode.Default, lang);
+
+    public void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData, AssetMode mode, ESystemLanguage lang)
+    {
+        // Process folder.
+        fileCache.TryGetCacheByModID(modData.ModId.ToLower(), out var cacheContent);
+        foreach (var file in Directory.EnumerateFiles(assetsDir, "*.*", SearchOption.AllDirectories))
+        {
+            var identifier = new FileIdentifier(Path.GetFileName(file), lang, mode);
+            if (cacheContent.ContainsKey(identifier))
+            {
+                if (!LoadAssetCache(identifier, cacheContent[identifier], modData))
+                {
+                    cacheContent.Remove(identifier);
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            this.AddAssetFile(file, mode, lang, modData);
         }
     }
 

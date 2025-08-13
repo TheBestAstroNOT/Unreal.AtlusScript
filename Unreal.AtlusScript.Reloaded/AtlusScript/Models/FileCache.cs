@@ -116,7 +116,7 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript.Models
 
         public void Save()
         {
-            var jsonPath = Path.Combine(RootFolder, "CacheRegistry.json");
+            var jsonPath = Path.Combine(CacheFolder, "CacheRegistry.json");
 
             // Optionally create directory if not exists
             Directory.CreateDirectory(Path.GetDirectoryName(jsonPath)!);

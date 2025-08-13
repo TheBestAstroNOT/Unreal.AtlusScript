@@ -26,6 +26,23 @@ public interface IAtlusAssets
     void RegisterAssetsFolder(string assetsDir, ESystemLanguage lang);
 
     /// <summary>
+    /// Add a folder to register Atlus assets from, has caching enabled.
+    /// </summary>
+    /// <param name="assetsDir">Assets folder.</param>
+    /// <param name="modData">Mod data consisting of the mod ID and Directory.</param>
+    /// <param name="mode">Registration mode.</param>
+    /// <param name="lang">Asset language.</param>
+    void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData, AssetMode mode, ESystemLanguage lang);
+
+    /// <summary>
+    /// Add a folder to register Atlus assets from, has caching enabled.
+    /// </summary>
+    /// <param name="assetsDir">Assets folder.</param>
+    /// <param name="modData">Mod data consisting of the mod ID and Directory.</param>
+    /// <param name="lang">Asset language.</param>
+    void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData, ESystemLanguage lang);
+
+    /// <summary>
     /// Add a folder to register Atlus assets from.
     /// </summary>
     /// <param name="assetsDir">Assets folder.</param>
@@ -52,6 +69,12 @@ public interface IAtlusAssets
     void AddAsset(string name, string content, AssetType type, AssetMode mode);
 }
 
+public record AssetsMod(string ModId, string ModDir)
+{
+    public string BaseAssetsDir { get; } = Path.Join(ModDir, "ue-atlus-script");
+
+    public string AstreaAssetsDir { get; } = Path.Join(ModDir, "ue-atlus-script", "astrea");
+}
 public enum AssetType
 {
     BMD,

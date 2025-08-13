@@ -67,7 +67,11 @@ public class Mod : ModBase, IExports
         var assetCompiler = new AtlusAssetCompiler(flowCompiler, msgCompiler);
 
         //Generate/Load the file cache registry
-        string jsonPath = Path.Combine(modDir, "CacheRegistry.json");
+        if (!Directory.Exists(Path.Combine(modDir, "Cache")))
+        {
+            Directory.CreateDirectory(Path.Combine(modDir, "Cache"));
+        }
+        string jsonPath = Path.Combine(modDir, "Cache", "CacheRegistry.json");
         FileCacheRegistry registry;
         if (File.Exists(jsonPath))
         {
