@@ -14,11 +14,6 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     private readonly AtlusAssetCompiler compiler;
     private readonly FileCacheRegistry fileCache;
     private readonly SHA1 sha1;
-
-    //Generate blank active asset list
-    //Populate with assets from mods (one of each asset per language)
-    //Check if asset path and date modified matches cache. If cached then load cache else compile asset.
-    //Load cache and compiled assets into active asset list.
     private readonly Dictionary<ESystemLanguage, List<BaseAssetContainer>> assetContainers = new() 
     {
         {ESystemLanguage.EN, []},
