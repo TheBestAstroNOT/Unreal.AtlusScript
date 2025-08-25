@@ -181,26 +181,54 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         }
     }
 
-    public void RegisterAssetsFolder(string assetsDir, ESystemLanguage lang) => this.RegisterAssetsFolder(assetsDir, AssetMode.Default, lang);
+    public void RegisterAssetsFolder(string assetsDir) => this.RegisterAssetsFolder(assetsDir, AssetMode.Default);
 
-    public void RegisterAssetsFolder(string assetsDir, AssetMode mode, ESystemLanguage lang)
+    public void RegisterAssetsFolder(string assetsDir, AssetMode mode)
     {
-        // Process folder.
-        foreach (var file in Directory.EnumerateFiles(assetsDir, "*.*", SearchOption.AllDirectories))
+        foreach (var dir in Directory.EnumerateDirectories(assetsDir, "*", SearchOption.AllDirectories))
         {
-            this.AddAssetFile(file, mode, lang);
+            ESystemLanguage dirLang = GetFileLang(assetsDir, dir);
+            foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
+            {
+                var identifier = new FileIdentifier(Path.GetFileName(file), dirLang, mode);
+                this.AddAssetFile(file, mode, dirLang);
+            }
+        }
+        foreach (var file in Directory.EnumerateFiles(assetsDir, "*.*", SearchOption.TopDirectoryOnly))
+        {
+            this.AddAssetFile(file, mode, ESystemLanguage.UNIVERSAL);
         }
     }
 
-    public void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData, ESystemLanguage lang) => this.RegisterAssetsFolderWithModData(assetsDir, modData, AssetMode.Default, lang);
+    public void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData) => this.RegisterAssetsFolderWithModData(assetsDir, modData, AssetMode.Default);
 
-    public void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData, AssetMode mode, ESystemLanguage lang)
+    public void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData, AssetMode mode)
     {
-        // Process folder.
         fileCache.TryGetCacheByModID(modData.ModId.ToLower(), out var cacheContent);
-        foreach (var file in Directory.EnumerateFiles(assetsDir, "*.*", SearchOption.AllDirectories))
+        foreach (var dir in Directory.EnumerateDirectories(assetsDir, "*", SearchOption.AllDirectories))
         {
-            var identifier = new FileIdentifier(Path.GetFileName(file), lang, mode);
+            ESystemLanguage dirLang = GetFileLang(assetsDir, dir);
+            foreach (var file in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
+            {
+                var identifier = new FileIdentifier(Path.GetFileName(file), dirLang, mode);
+                if (cacheContent.ContainsKey(identifier))
+                {
+                    if (!LoadAssetCache(identifier, cacheContent[identifier], modData))
+                    {
+                        cacheContent.Remove(identifier);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                this.AddAssetFile(file, mode, dirLang, modData);
+                
+            }
+        }
+        foreach (var file in Directory.EnumerateFiles(assetsDir, "*.*", SearchOption.TopDirectoryOnly))
+        {
+            var identifier = new FileIdentifier(Path.GetFileName(file), ESystemLanguage.UNIVERSAL, mode);
             if (cacheContent.ContainsKey(identifier))
             {
                 if (!LoadAssetCache(identifier, cacheContent[identifier], modData))
@@ -212,7 +240,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
                     continue;
                 }
             }
-            this.AddAssetFile(file, mode, lang, modData);
+            this.AddAssetFile(file, mode, ESystemLanguage.UNIVERSAL, modData);
         }
     }
 

@@ -16,14 +16,14 @@ public interface IAtlusAssets
     /// <param name="assetsDir">Assets folder.</param>
     /// <param name="mode">Registration mode.</param>
     /// <param name="lang">Asset language.</param>
-    void RegisterAssetsFolder(string assetsDir, AssetMode mode, ESystemLanguage lang);
+    void RegisterAssetsFolder(string assetsDir, AssetMode mode);
 
     /// <summary>
     /// Add a folder to register Atlus assets from.
     /// </summary>
     /// <param name="assetsDir">Assets folder.</param>
     /// <param name="lang">Asset language.</param>
-    void RegisterAssetsFolder(string assetsDir, ESystemLanguage lang);
+    void RegisterAssetsFolder(string assetsDir);
 
     /// <summary>
     /// Add a folder to register Atlus assets from, has caching enabled.
@@ -31,16 +31,14 @@ public interface IAtlusAssets
     /// <param name="assetsDir">Assets folder.</param>
     /// <param name="modData">Mod data consisting of the mod ID and Directory.</param>
     /// <param name="mode">Registration mode.</param>
-    /// <param name="lang">Asset language.</param>
-    void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData, AssetMode mode, ESystemLanguage lang);
+    void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData, AssetMode mode);
 
     /// <summary>
     /// Add a folder to register Atlus assets from, has caching enabled.
     /// </summary>
     /// <param name="assetsDir">Assets folder.</param>
     /// <param name="modData">Mod data consisting of the mod ID and Directory.</param>
-    /// <param name="lang">Asset language.</param>
-    void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData, ESystemLanguage lang);
+    void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData);
 
     /// <summary>
     /// Add a folder to register Atlus assets from.
