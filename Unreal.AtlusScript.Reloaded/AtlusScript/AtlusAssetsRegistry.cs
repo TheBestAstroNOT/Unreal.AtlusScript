@@ -136,7 +136,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         {
             return lang;
         }
-        return ESystemLanguage.EN;
+        return ESystemLanguage.UNIVERSAL;
     }
 
     public bool TryGetAsset(AssetMode mode, string assetName, [NotNullWhen(true)]out byte[]? assetData, ESystemLanguage currentAssetLang)
