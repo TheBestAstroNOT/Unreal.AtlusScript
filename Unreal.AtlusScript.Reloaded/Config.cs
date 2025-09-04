@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using Unreal.AtlusScript.Interfaces;
 using Unreal.AtlusScript.Reloaded.Template.Configuration;
 
 namespace Unreal.AtlusScript.Reloaded.Configuration;
@@ -26,8 +27,8 @@ public class Config : Configurable<Config>
 
     [DisplayName("Override Asset Locale")]
     [Description("Override the locale of assets to load.")]
-    [DefaultValue(AssetConfigLanguage.Disabled)]
-    public AssetConfigLanguage OverrideAssetLocale { get; set; } = AssetConfigLanguage.Disabled;
+    [DefaultValue(ESystemLanguage.Disabled)]
+    public ESystemLanguage OverrideAssetLocale { get; set; } = ESystemLanguage.Disabled;
 }
 
 public enum DumpType
@@ -42,24 +43,6 @@ public enum Decomp_Endianess
     Both,
     BIG_ENDIAN,
     LITTLE_ENDIAN,
-}
-
-public enum AssetConfigLanguage
-{
-    EN,
-    KO,
-    JA,
-    ZH_HANS,
-    ZH_HANT,
-    FR,
-    IT,
-    DE,
-    PL,
-    ES,
-    PT,
-    RU,
-    TR,
-    Disabled
 }
 
 /// <summary>

@@ -66,49 +66,9 @@ public class Mod : ModBase, IExports
 
         var assetCompiler = new AtlusAssetCompiler(flowCompiler, msgCompiler);
 
-        //Generate/Load the file cache registry
-        if (!Directory.Exists(Path.Combine(modDir, "Cache")))
-        {
-            Directory.CreateDirectory(Path.Combine(modDir, "Cache"));
-        }
-        string jsonPath = Path.Combine(modDir, "Cache", "CacheRegistry.json");
-        FileCacheRegistry registry;
-        if (File.Exists(jsonPath))
-        {
-            var json = File.ReadAllText(jsonPath);
-            registry = JsonSerializer.Deserialize<FileCacheRegistry>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                WriteIndented = false,
-            }) ?? new FileCacheRegistry() {Version = modConfig.ModVersion};
-            registry.CacheFolder = Path.Combine(modDir, "Cache");
-            if (registry.Version != modConfig.ModVersion)
-            {
-                Log.Warning($"Cache registry version mismatch. Expected: {modConfig.ModVersion}, Found: {registry.Version}. Recreating cache registry.");
-                File.Delete(jsonPath);
-                if (Directory.Exists(registry.CacheFolder))
-                {
-                    Directory.Delete(registry.CacheFolder, true);
-                }
-                registry = new FileCacheRegistry();
-                registry.CacheFolder = Path.Combine(modDir, "Cache");
-                registry.Version = modConfig.ModVersion;
-            }
-            registry.ModsFolder = Path.GetDirectoryName(modDir) ?? string.Empty;
-            registry.RootFolder = modDir;
-            registry.Save();
-        }
-        else
-        {
-            registry = new FileCacheRegistry();
-            registry.CacheFolder = Path.Combine(modDir, "Cache");
-            registry.ModsFolder = Path.GetDirectoryName(modDir) ?? string.Empty;
-            registry.RootFolder = modDir;
-            registry.Save();
-        }
-        this.atlusRegistry = new(assetCompiler, registry);
+        var registry = FileCacheRegistry.LoadOrCreate(modDir, modConfig.ModVersion);
+        this.atlusRegistry = new(this.modLoader, assetCompiler, registry);
         this.atlusScript = new(uobjects!, unreal!, this.atlusRegistry, flowDecompiler, gameLibrary, modDir, config);
-
         this.modLoader.AddOrReplaceController<IAtlusAssets>(this.owner, this.atlusRegistry);
         this.modLoader.ModLoading += this.OnModLoading;
         this.ApplyConfig();

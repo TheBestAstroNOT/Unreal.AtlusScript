@@ -7,45 +7,28 @@ public interface IAtlusAssets
     /// For default (Xrd777) game scripts only.
     /// </summary>
     /// <param name="assetsDir">Assets folder.</param>
-    [Obsolete("Use RegisterAssetsFolder instead.")]
     void AddAssetsFolder(string assetsDir);
 
     /// <summary>
-    /// Add a folder to register Atlus assets from.
+    /// Add a folder to register Atlus assets from, has caching enabled.
     /// </summary>
     /// <param name="assetsDir">Assets folder.</param>
+    /// <param name="modID">Mod ID of the caller.</param>
     /// <param name="mode">Registration mode.</param>
-    /// <param name="lang">Asset language.</param>
-    void RegisterAssetsFolder(string assetsDir, AssetMode mode);
-
-    /// <summary>
-    /// Add a folder to register Atlus assets from.
-    /// </summary>
-    /// <param name="assetsDir">Assets folder.</param>
-    /// <param name="lang">Asset language.</param>
-    void RegisterAssetsFolder(string assetsDir);
+    void AddAssetsFolderWithModData(string assetsDir, string modID, AssetMode mode);
 
     /// <summary>
     /// Add a folder to register Atlus assets from, has caching enabled.
     /// </summary>
     /// <param name="assetsDir">Assets folder.</param>
-    /// <param name="modData">Mod data consisting of the mod ID and Directory.</param>
-    /// <param name="mode">Registration mode.</param>
-    void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData, AssetMode mode);
-
-    /// <summary>
-    /// Add a folder to register Atlus assets from, has caching enabled.
-    /// </summary>
-    /// <param name="assetsDir">Assets folder.</param>
-    /// <param name="modData">Mod data consisting of the mod ID and Directory.</param>
-    void RegisterAssetsFolderWithModData(string assetsDir, AssetsMod modData);
+    /// <param name="modID">Mod ID of the caller.</param>
+    void AddAssetsFolderWithModData(string assetsDir, string modID);
 
     /// <summary>
     /// Add a folder to register Atlus assets from.
     /// </summary>
     /// <param name="assetsDir">Assets folder.</param>
     /// <param name="mode">Registration mode.</param>
-    [Obsolete("Use RegisterAssetsFolder instead.")]
     void AddAssetsFolder(string assetsDir, AssetMode mode);
 
     /// <summary>
@@ -67,12 +50,6 @@ public interface IAtlusAssets
     void AddAsset(string name, string content, AssetType type, AssetMode mode);
 }
 
-public record AssetsMod(string ModId, string ModDir)
-{
-    public string BaseAssetsDir { get; } = Path.Join(ModDir, "ue-atlus-script");
-
-    public string AstreaAssetsDir { get; } = Path.Join(ModDir, "ue-atlus-script", "astrea");
-}
 public enum AssetType
 {
     BMD,
@@ -101,5 +78,6 @@ public enum ESystemLanguage : byte
     PT = 10,
     TR = 11,
     PL = 12,
-    UNIVERSAL
+    Any,
+    Disabled, // For overriding asset locale, only used for the config and should not be used elsewhere.
 };

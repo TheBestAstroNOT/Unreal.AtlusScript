@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Formats.Asn1;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Unreal.AtlusScript.Interfaces;
+using Unreal.AtlusScript.Reloaded.AtlusScript;
 
 namespace Unreal.AtlusScript.Reloaded.AtlusScript.Models
 {
@@ -58,7 +52,7 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript.Models
                 contents = null;
                 if (KeyToFile.TryGetValue(file.sourceModID, out var fileList))
                 {
-                    File.Delete(Path.Combine(CacheFolder, file.sourceModID, (file.language.ToString() != "UNIVERSAL") ? file.language.ToString().ToLower() : string.Empty, file.assetMode.ToString().ToLower(), file.hashedName.ToLower()));
+                    File.Delete(Path.Join(CacheFolder, file.sourceModID, (file.language.ToString() != "Any") ? file.language.ToString().ToLower() : string.Empty, file.assetMode.ToString().ToLower(), file.hashedName.ToLower()));
                     fileList.RemoveAt(arrIndex);
                     Save();
                 }
@@ -75,7 +69,7 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript.Models
         public bool TryGetCacheByModID(string modID, out Dictionary<FileIdentifier, Tuple<string, ReadOnlyMemory<byte>>> cacheContent)
         {
             cacheContent = new();
-            if(KeyToFile.TryGetValue(modID, out var fileList))
+            if(KeyToFile.TryGetValue(modID.ToLower(), out var fileList))
             {
                 cacheContent = new Dictionary<FileIdentifier, Tuple<string, ReadOnlyMemory<byte>>>(fileList.Count);
                 for (int i = fileList.Count - 1; i >= 0; i--)
@@ -91,8 +85,8 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript.Models
                         else
                         {
                             // Implemented till i figure out a better way to do this while generating cache.
-                            Log.Warning($"Duplicate file identifier found in cache: {identifier.Name} for mod {modID}. Deleting cache!");
-                            File.Delete(Path.Combine(CacheFolder, file.sourceModID, (file.language.ToString() != "UNIVERSAL") ? file.language.ToString().ToLower() : string.Empty, file.assetMode.ToString().ToLower(), file.hashedName.ToLower()));
+                            Log.Warning($"Duplicate file identifier found in cache: {identifier.Name} for mod {modID.ToLower()}. Deleting cache!");
+                            File.Delete(Path.Join(CacheFolder, file.sourceModID, (file.language.ToString() != "Any") ? file.language.ToString().ToLower() : string.Empty, file.assetMode.ToString().ToLower(), file.hashedName.ToLower()));
                             fileList.RemoveAt(i);
                             Save();
                         }
@@ -116,24 +110,59 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript.Models
 
         public void Save()
         {
-            var jsonPath = Path.Combine(CacheFolder, "CacheRegistry.json");
-
-            // Optionally create directory if not exists
+            var jsonPath = Path.Join(CacheFolder, "CacheRegistry.json");
             Directory.CreateDirectory(Path.GetDirectoryName(jsonPath)!);
 
-            var json = JsonSerializer.Serialize(this, new JsonSerializerOptions
-            {
-                WriteIndented = true // or false if size matters
-            });
+            var json = JsonSerializer.Serialize(this);
 
             File.WriteAllText(jsonPath, json);
+        }
+
+        public static FileCacheRegistry LoadOrCreate(string modDir, string expectedVersion)
+        {
+            string cacheDir = Path.Join(modDir, "Cache");
+            string jsonPath = Path.Join(cacheDir, "CacheRegistry.json");
+            Directory.CreateDirectory(cacheDir);
+            FileCacheRegistry registry;
+
+            if (File.Exists(jsonPath))
+            {
+                var json = File.ReadAllText(jsonPath);
+                registry = JsonSerializer.Deserialize<FileCacheRegistry>(json, new JsonSerializerOptions()
+                {
+                    PropertyNameCaseInsensitive = true,
+                    WriteIndented = false
+                }) ?? new FileCacheRegistry { Version = expectedVersion };
+
+                if (registry.Version != expectedVersion)
+                {
+                    Log.Warning($"Cache registry version mismatch. Expected: {expectedVersion}, Found: {registry.Version}. Recreating cache registry.");
+
+                    File.Delete(jsonPath);
+                    Directory.Delete(cacheDir, true);
+                    Directory.CreateDirectory(cacheDir);
+
+                    registry = new FileCacheRegistry { Version = expectedVersion };
+                }
+            }
+            else
+            {
+                registry = new FileCacheRegistry { Version = expectedVersion };
+            }
+
+            registry.CacheFolder = cacheDir;
+            registry.ModsFolder = Path.GetDirectoryName(modDir) ?? string.Empty;
+            registry.RootFolder = modDir;
+
+            registry.Save();
+            return registry;
         }
     }
 }
 
 public readonly record struct FileIdentifier(
     string Name,
-    ESystemLanguage Language = ESystemLanguage.UNIVERSAL,
+    ESystemLanguage Language = ESystemLanguage.Any,
     AssetMode AssetMode = AssetMode.Default
 );
 
@@ -142,7 +171,7 @@ public sealed class CachedFile
     /// <summary>
     /// Language of the file. (Universal, English, Japanese, etc.)
     /// </summary>
-    public ESystemLanguage language { get; set; } = ESystemLanguage.UNIVERSAL;
+    public ESystemLanguage language { get; set; } = ESystemLanguage.Any;
 
     /// <summary>
     /// Asset mode of the file. (Default, Astrea)
@@ -193,7 +222,7 @@ public sealed class CachedFile
     /// </summary>
     public bool IsCacheFresh(string modsRoot)
     {
-        var sourcePath = Path.Combine(modsRoot, sourceModID, sourceDirectory, sourceName);
+        var sourcePath = Path.Join(modsRoot, sourceModID, sourceDirectory, sourceName);
         try
         {
             if (File.Exists(sourcePath) && File.GetLastWriteTimeUtc(sourcePath) <= sourceLastModified)
@@ -217,8 +246,7 @@ public sealed class CachedFile
     /// <returns></returns>
     public bool TryGetValidCache(string cacheRoot, out byte[]? contents)
     {
-        
-        string cachePath = Path.Combine(cacheRoot, sourceModID, (language.ToString() != "UNIVERSAL") ? language.ToString().ToLower() : string.Empty, assetMode.ToString().ToLower(), hashedName.ToLower());
+        string cachePath = AtlusAssetsRegistry.GetHashedCachePath(cacheRoot, hashedName, sourceModID, assetMode, language);
         try {
             contents = File.ReadAllBytes(cachePath);
             return true;

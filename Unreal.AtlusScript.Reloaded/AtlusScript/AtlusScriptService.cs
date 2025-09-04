@@ -30,7 +30,7 @@ internal unsafe class AtlusScriptService
     private DumpType dumpBmds;
     private DumpType dumpBfs;
     private Decomp_Endianess decompBfEndian;
-    private ESystemLanguage? gameLanguage;
+    private ESystemLanguage gameLanguage = ESystemLanguage.Any;
 
     public AtlusScriptService(
         IUObjects uobjects,
@@ -52,18 +52,15 @@ internal unsafe class AtlusScriptService
         _GetLanguage = new SHFunction<GetLanguage>("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 83 EC 30 E8");        
     }
 
-    private ESystemLanguage GetGameLanguage()
+    private void GetGameLanguage()
     {
-        try
+        if (_GetLanguage == null || _GetLanguage.OriginalFunction == null)
         {
-            gameLanguage ??= _GetLanguage!.OriginalFunction();
-            Log.Debug($"Set game language to: {gameLanguage}");
-            return (ESystemLanguage)gameLanguage;
+            return;
         }
-        catch
-        {
-            throw new Exception("Failed to get game language");
-        }
+
+        gameLanguage = _GetLanguage.OriginalFunction();
+        Log.Information($"Game Language set to: {gameLanguage}");
     }
 
     private void OnObjectCreated(UnrealObject obj)
@@ -122,22 +119,19 @@ internal unsafe class AtlusScriptService
         }
 
         var mode = this.game.IsAstrea() ? AssetMode.Astrea : AssetMode.Default;
-        if(gameLanguage==null)
+        if(gameLanguage == ESystemLanguage.Any)
         {
-            Log.Debug("Trying to get game language");
             GetGameLanguage();
         }
         if (this.assetsRegistry.TryGetAsset(mode, obj.Name, out var data, (ESystemLanguage)gameLanguage!))
         {
-                var objAsset = (UAtlusScriptAsset*)obj.Self;
-
-                var buffer = this.unreal.FMalloc(data.Length, 0);
-                Marshal.Copy(data, 0, buffer, data.Length);
-
-                objAsset->mBuf.Num = data.Length;
-                objAsset->mBuf.Max = data.Length;
-                objAsset->mBuf.AllocatorInstance = (byte*)buffer;
-                Log.Debug($"Custom Asset ({mode}): {obj.Name}");
+            var objAsset = (UAtlusScriptAsset*)obj.Self;
+            var buffer = this.unreal.FMalloc(data.Length, 0);
+            Marshal.Copy(data, 0, buffer, data.Length);
+            objAsset->mBuf.Num = data.Length;
+            objAsset->mBuf.Max = data.Length;
+            objAsset->mBuf.AllocatorInstance = (byte*)buffer;
+            Log.Debug($"Custom Asset ({mode}): {obj.Name}");
         }
     }
 
