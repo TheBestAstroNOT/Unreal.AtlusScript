@@ -44,7 +44,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     public void RegisterMod(AssetsMod mod)
     {
         Log.Information($"Registering assets from: {mod.ModId}");
-        fileCache.TryGetCacheByModID(mod.ModId.ToLower(), out var cacheContent);
+        fileCache.TryGetCacheByModId(mod.ModId.ToLower(), out var cacheContent);
         if (Directory.Exists(mod.BaseAssetsDir))
         {
             foreach (var topdir in Directory.EnumerateDirectories(mod.BaseAssetsDir, "*", SearchOption.TopDirectoryOnly))
@@ -184,11 +184,11 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
         }
     }
 
-    public void AddAssetsFolderWithModData(string assetsDir, string modID) => this.AddAssetsFolderWithModData(assetsDir, modID, AssetMode.Default);
+    public void AddAssetsFolderCached(string assetsDir, string modId) => this.AddAssetsFolderCached(assetsDir, modId, AssetMode.Default);
 
-    public void AddAssetsFolderWithModData(string assetsDir, string modID, AssetMode mode)
+    public void AddAssetsFolderCached(string assetsDir, string modId, AssetMode mode)
     {
-        fileCache.TryGetCacheByModID(modID, out var cacheContent);
+        fileCache.TryGetCacheByModId(modId, out var cacheContent);
         foreach (var dir in Directory.EnumerateDirectories(assetsDir, "*", SearchOption.AllDirectories))
         {
             ESystemLanguage dirLang = GetFileLang(assetsDir, dir);
@@ -197,7 +197,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
                 var identifier = new FileIdentifier(Path.GetFileName(file), dirLang, mode);
                 if (cacheContent.ContainsKey(identifier))
                 {
-                    if (!LoadAssetCache(identifier, cacheContent[identifier], modID))
+                    if (!LoadAssetCache(identifier, cacheContent[identifier], modId))
                     {
                         cacheContent.Remove(identifier);
                     }
@@ -206,7 +206,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
                         continue;
                     }
                 }
-                this.AddAssetFile(file, mode, dirLang, modID);
+                this.AddAssetFile(file, mode, dirLang, modId);
                 
             }
         }
@@ -215,7 +215,7 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
             var identifier = new FileIdentifier(Path.GetFileName(file), ESystemLanguage.Any, mode);
             if (cacheContent.ContainsKey(identifier))
             {
-                if (!LoadAssetCache(identifier, cacheContent[identifier], modID))
+                if (!LoadAssetCache(identifier, cacheContent[identifier], modId))
                 {
                     cacheContent.Remove(identifier);
                 }
@@ -224,11 +224,11 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
                     continue;
                 }
             }
-            this.AddAssetFile(file, mode, ESystemLanguage.Any, modID);
+            this.AddAssetFile(file, mode, ESystemLanguage.Any, modId);
         }
     }
 
-    private void AddAssetFile(string file, AssetMode mode, ESystemLanguage currentAssetLang, string modID) => AddAssetFile(file, mode, currentAssetLang, new AssetsMod(modID, this.modLoader.GetDirectoryForModId(modID)));
+    private void AddAssetFile(string file, AssetMode mode, ESystemLanguage currentAssetLang, string modId) => AddAssetFile(file, mode, currentAssetLang, new AssetsMod(modId, this.modLoader.GetDirectoryForModId(modId)));
 
     private void AddAssetFile(string file, AssetMode mode, ESystemLanguage currentAssetLang, AssetsMod? modData = null)
     {
@@ -286,12 +286,12 @@ internal unsafe class AtlusAssetsRegistry : IAtlusAssets
     }
 
     public static string GetHashedCachePath(string CacheRoot, string hashedname, AssetsMod modData, AssetMode mode, ESystemLanguage currentAssetLang) => GetHashedCachePath(CacheRoot, hashedname, modData.ModId, mode, currentAssetLang);
-    public static string GetHashedCachePath(string CacheRoot, string hashedname, string modID, AssetMode mode, ESystemLanguage currentAssetLang)
+    public static string GetHashedCachePath(string CacheRoot, string hashedname, string modId, AssetMode mode, ESystemLanguage currentAssetLang)
     {
-        return Path.Join(CacheRoot, modID.ToLower(), (currentAssetLang != ESystemLanguage.Any) ? currentAssetLang.ToString().ToLower() : string.Empty, mode.ToString().ToLower(), hashedname);
+        return Path.Join(CacheRoot, modId.ToLower(), (currentAssetLang != ESystemLanguage.Any) ? currentAssetLang.ToString().ToLower() : string.Empty, mode.ToString().ToLower(), hashedname);
     }
 
-    private bool LoadAssetCache(FileIdentifier identifier, Tuple<string, ReadOnlyMemory<byte>> data, string modID) => LoadAssetCache(identifier, data, new AssetsMod(modID, this.modLoader.GetDirectoryForModId(modID)));
+    private bool LoadAssetCache(FileIdentifier identifier, Tuple<string, ReadOnlyMemory<byte>> data, string modId) => LoadAssetCache(identifier, data, new AssetsMod(modId, this.modLoader.GetDirectoryForModId(modId)));
     private bool LoadAssetCache(FileIdentifier identifier, Tuple<string, ReadOnlyMemory<byte>> data, AssetsMod mod)
     {
         Log.Verbose($"Loading cached asset: {identifier.Name} ");

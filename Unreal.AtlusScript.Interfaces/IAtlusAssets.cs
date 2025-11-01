@@ -10,26 +10,26 @@ public interface IAtlusAssets
     void AddAssetsFolder(string assetsDir);
 
     /// <summary>
-    /// Add a folder to register Atlus assets from, has caching enabled.
-    /// </summary>
-    /// <param name="assetsDir">Assets folder.</param>
-    /// <param name="modID">Mod ID of the caller.</param>
-    /// <param name="mode">Registration mode.</param>
-    void AddAssetsFolderWithModData(string assetsDir, string modID, AssetMode mode);
-
-    /// <summary>
-    /// Add a folder to register Atlus assets from, has caching enabled.
-    /// </summary>
-    /// <param name="assetsDir">Assets folder.</param>
-    /// <param name="modID">Mod ID of the caller.</param>
-    void AddAssetsFolderWithModData(string assetsDir, string modID);
-
-    /// <summary>
     /// Add a folder to register Atlus assets from.
     /// </summary>
     /// <param name="assetsDir">Assets folder.</param>
     /// <param name="mode">Registration mode.</param>
     void AddAssetsFolder(string assetsDir, AssetMode mode);
+
+    /// <summary>
+    /// Add a folder to register Atlus assets from, has caching enabled.
+    /// </summary>
+    /// <param name="assetsDir">Assets folder.</param>
+    /// <param name="modId">Mod ID of the caller.</param>
+    /// <param name="mode">Registration mode.</param>
+    void AddAssetsFolderCached(string assetsDir, string modId, AssetMode mode);
+
+    /// <summary>
+    /// Add a folder to register Atlus assets from, has caching enabled.
+    /// </summary>
+    /// <param name="assetsDir">Assets folder.</param>
+    /// <param name="modId">Mod ID of the caller.</param>
+    void AddAssetsFolderCached(string assetsDir, string modId);
 
     /// <summary>
     /// Add an asset with the given name and content.

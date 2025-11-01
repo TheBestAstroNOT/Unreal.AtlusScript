@@ -66,7 +66,7 @@ namespace Unreal.AtlusScript.Reloaded.AtlusScript.Models
             return false;
         }
 
-        public bool TryGetCacheByModID(string modID, out Dictionary<FileIdentifier, Tuple<string, ReadOnlyMemory<byte>>> cacheContent)
+        public bool TryGetCacheByModId(string modID, out Dictionary<FileIdentifier, Tuple<string, ReadOnlyMemory<byte>>> cacheContent)
         {
             cacheContent = new();
             if(KeyToFile.TryGetValue(modID.ToLower(), out var fileList))
